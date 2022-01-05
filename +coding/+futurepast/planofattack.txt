@@ -1,0 +1,9 @@
+ +---------------------------------------------------------+
+ +-          Attack Plan - Yotson                         -+
+ ----------------------------------------------------------+
+
+Coordcentric
+|
++---+--- calcfield for array of tables
+    |
+    +--- arrray entropy calculation over those to compute 
