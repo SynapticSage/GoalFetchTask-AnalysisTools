@@ -34,4 +34,4 @@ Statescript/Data/Code_*.m
 !/Statescript/*.fig
 *Graph*.fig
 /Statescript/Data/*
-
+tmp*
