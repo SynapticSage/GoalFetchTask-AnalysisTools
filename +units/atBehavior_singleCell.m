@@ -3,6 +3,13 @@ function [spikesBeh, spikeTimes] = ...
 % Handles the single cell time lookup into the behavior (either the behavior
 % properties themselves or the indices of the behavior table that match). It
 % can also handle time shifting those lookups efficiently.
+%
+%
+% Future devs
+% -----------
+%
+% Possible that the shift -> cell of tables type and non-shift -> table type
+% leads to needless confusion. Might consider simplifying to one type.
 
 % --------------
 % Prepare inputs
@@ -17,9 +24,9 @@ ip.addParameter('prop', []);
 ip.addParameter('returnIndices', false); % This triggers a behavior where we return a vector of indices instead of a table.
                                             % if we have shifts, then it's a matrix.
 ip.addParameter('output', 'table'); % {table} | matrix ... ultimately determinse either straightup what we return, eeither a ceell of this type of the type itself
-ip.addParameter('concatShifts', []); %wehther to concatonate the shifts we get at the end of the computation
-ip.addParameter('annotateNeuron', []);
-ip.addParameter('annotateShift', true);
+ip.addParameter('concatShifts', true); %wehther to concatonate the shifts we get at the end of the computation
+ip.addParameter('annotateNeuron', []); % Number for a given neuron
+ip.addParameter('annotateShift', true); % whether or not to annotate the shift
 ip.parse(varargin{:})
 Opt = ip.Results;
 Opt.violationHandling = lower(Opt.violationHandling);
@@ -29,13 +36,6 @@ if isempty(Opt.violationHandling)
         Opt.violationHandling = 'nan';
     else
         Opt.violationHandling = 'remove';
-    end
-end
-if isempty(Opt.concatShifts)
-    if Opt.returnIndices
-        Opt.concatShifts = true;
-    else
-        Opt.concatShifts = false;
     end
 end
 if Opt.returnIndices && strcmp(Opt.violationHandling, 'remove')
@@ -91,6 +91,9 @@ if spikeTimesExist
         behavior_times = reshape(behavior_times, size(inds)); 
         violations = abs(behavior_times - (spikeTimes(:)+Opt.shift(:)')) > Opt.matchTimeTolerance; 
         for shift = 1:numel(Opt.shift)
+            if Opt.annotateShift
+                spikesBeh{shift} = shift * ones(height(spikesBeh{shift}), 1);
+            end
             switch Opt.violationHandling
                 case 'remove'
                 spikesBeh{shift} = spikesBeh{shift}(~violations(:,shift),:);
@@ -98,7 +101,7 @@ if spikeTimesExist
                 spikesBeh{shift}(violations(:,shift),:) = nan;
             end
         end
-    % ONE SHIFT
+    % NO SHIFT DIMENSION
     % ---------------
     else
         % JUST INDICES
@@ -128,8 +131,23 @@ else
     end
 end
 
+% -----------------------------
+% (optional) neuron annotation
+% -----------------------------
+if Opt.annotateNeuron
+    if iscell(spikesBeh)
+        for i = 1:numel(spikeBeh)
+            spikesBeh{i} = Opt.annotateNeuron * ones(height(spikesBeh{i}),1);
+        end
+    else
+        for i = 1:numel(spikeBeh)
+            spikesBeh{i} = Opt.annotateNeuron * ones(height(spikesBeh{i}),1);
+        end
+    end
+end
+
 % --------------
-% Prepare output
+% prepare output
 % --------------
 if strcmp(Opt.output,'cellmatrix')
 

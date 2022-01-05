@@ -196,7 +196,7 @@ if ismember("dotson", Opt.analyses)
 
     %    Get shifted fields for shuffles      
     % ----------------------------------------
-    for iS = progress(30:Opt.nShuffle, 'Title', 'Shuffles')
+    for iS = progress(Opt.nShuffle-2:Opt.nShuffle, 'Title', 'Shuffles')
         % get
         Shuf = {animal, day};
         [item, Shuf] = units.shuffle.get(Shuf, iS, 'debug', false);

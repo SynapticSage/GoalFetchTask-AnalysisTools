@@ -163,14 +163,10 @@ keepjumps 211
 normal! 0
 lcd ~/Code/analysis
 tabnext
-edit ~/Code/analysis/analyses.m
+edit ~/Code/analysis/+coding/+futurepast/shuffcorrect.m
 let s:save_splitbelow = &splitbelow
 let s:save_splitright = &splitright
 set splitbelow splitright
-wincmd _ | wincmd |
-vsplit
-1wincmd h
-wincmd w
 let &splitbelow = s:save_splitbelow
 let &splitright = s:save_splitright
 wincmd t
@@ -180,37 +176,22 @@ set winminheight=0
 set winheight=1
 set winminwidth=0
 set winwidth=1
-exe 'vert 1resize ' . ((&columns * 61 + 61) / 122)
-exe 'vert 2resize ' . ((&columns * 60 + 61) / 122)
 argglobal
-balt ~/Code/analysis/+units/atBehavior.m
-let s:l = 1 - ((0 * winheight(0) + 18) / 37)
+if bufexists("~/Code/analysis/+coding/+futurepast/shuffcorrect.m") | buffer ~/Code/analysis/+coding/+futurepast/shuffcorrect.m | else | edit ~/Code/analysis/+coding/+futurepast/shuffcorrect.m | endif
+if &buftype ==# 'terminal'
+  silent file ~/Code/analysis/+coding/+futurepast/shuffcorrect.m
+endif
+balt ~/Code/analysis/analyses.m
+let s:l = 1 - ((0 * winheight(0) + 12) / 24)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
 keepjumps 1
 normal! 0
 lcd ~/Code/analysis
-wincmd w
-argglobal
-if bufexists("~/Code/analysis/+units/atBehavior_singleCell.m") | buffer ~/Code/analysis/+units/atBehavior_singleCell.m | else | edit ~/Code/analysis/+units/atBehavior_singleCell.m | endif
-if &buftype ==# 'terminal'
-  silent file ~/Code/analysis/+units/atBehavior_singleCell.m
-endif
-balt ~/Code/analysis/+units/atBehavior.m
-let s:l = 34 - ((11 * winheight(0) + 18) / 37)
-if s:l < 1 | let s:l = 1 | endif
-keepjumps exe s:l
-normal! zt
-keepjumps 34
-normal! 016|
-lcd ~/Code/analysis
-wincmd w
-exe 'vert 1resize ' . ((&columns * 61 + 61) / 122)
-exe 'vert 2resize ' . ((&columns * 60 + 61) / 122)
 tabnext 2
 badd +1 ~/Documents/Notes/Overarch
-badd +1 ~/Code/analysis/analyses.m
+badd +228 ~/Code/analysis/analyses.m
 badd +1 ~/Code/analysis/+coding/poissonModel_given_tuningCurveModel.m
 badd +1 ~/Code/analysis/+coding/+field/combine.m
 badd +1 ~/Code/analysis/+coding/+field/place.m
@@ -263,7 +244,7 @@ badd +43 ~/Code/analysis/+coding/+file/save.m
 badd +32 ~/Code/analysis/+units/+clean/+sparse/addMissingNeurons.m
 badd +10 ~/Code/analysis/+units/getRateMatrix.m
 badd +1 ~/Code/analysis/+units/getMarkMatrix.m
-badd +4 ~/Code/analysis/+units/atBehavior_singleCell.m
+badd +34 ~/Code/analysis/+units/atBehavior_singleCell.m
 badd +30 ~/Code/analysis/+units/atBehavior.m
 badd +1 ~/Code/analysis/+gbehavior/+clean/removeduplicatetimes.m
 badd +124 ~/Code/analysis/+gbehavior/lookup.m
@@ -412,6 +393,7 @@ badd +1 ~/Code/analysis/+units/+shuffle/+helper/cache.m
 badd +33 /usr/local/MATLAB/R2021b/toolbox/matlab/datatypes/tabular/struct2table.m
 badd +2 ~/Code/analysis/tmp_histcount.m
 badd +211 ~/Code/analysis/+units/sparseToDense.m
+badd +0 ~/Code/analysis/+coding/+futurepast/shuffcorrect.m
 if exists('s:wipebuf') && len(win_findbuf(s:wipebuf)) == 0 && getbufvar(s:wipebuf, '&buftype') isnot# 'terminal'
   silent exe 'bwipe ' . s:wipebuf
 endif

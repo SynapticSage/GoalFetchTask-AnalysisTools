@@ -45,9 +45,6 @@ ip.addParameter('pack', false);
 
 % Format of tables/matrices
 ip.addParameter('props', []);                     % List of vars to constrain the table to
-ip.addParameter('merge', false);                  % Merge each cells spike-behavior table into one table?
-ip.addParameter('mergeOverCells', false);         % When we have shifts, spikes.beh is a cell indiced by neuron number and each contains a cell indexed by possible shifts. if we merge withinShifts, we combine the tables with matching shift
-ip.addParameter('mergeOverShifts', false);      % When we have shifts, spikes.beh is a cell indiced by neuron number and each contains a cell indexed by possible shifts. if we merge withinShifts, we combine the tables with matching shift
 
 % Table query
 ip.addParameter('query', []);
@@ -120,27 +117,12 @@ if istable(beh) && Opt.sparse % SPARSE SPIKE TIMES
     keyboard
     if numel(Opt.shift) > 1
         spikes.beh = cat(1, spikes.beh{:});
+        % May have to use something like this if {:} doesn't work
+        % -------------------------------------------------------
+        % spikes.beh = util.cell.icat(spikes.beh, 1,...
+        %     'fieldCombine', 'union', 'pack', Opt.pack);
     end
 
-    % Merge tables?
-    if Opt.merge
-        Opt.mergeOverCells  = true;
-        Opt.mergeOverShifts = true;
-    end
-    if Opt.mergeOverCells
-        spikes.beh = nd.dimLabel(spikes.beh,    1, 'neuron');
-        spikes.beh = util.cell.icat(spikes.beh, 1,...
-            'fieldCombine', 'union', 'pack', Opt.pack);
-    end
-    if Opt.mergeOverShifts
-        spikes.beh = nd.dimLabel(spikes.beh, 2, 'shift');
-        spikes.beh = util.cell.icat(spikes.beh, 2,...
-            'fieldCombine', 'union', 'pack', Opt.pack);
-    end
-    if Opt.merge
-        assert(isscalar(spikes.beh))
-        spikes.beh = spikes.beh{1}; % Should be a scalar
-    end
 
 elseif isnumeric(beh) || ~Opt.sparse % DENSE RASTER
 
