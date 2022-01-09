@@ -17,9 +17,11 @@ ip.addParameter('returnOutput', 'annotated'); % {annotated} | matrix ,i f matrix
 % Densification method
 % --------------------------
 ip.addParameter('method', ''); % overlappingWindows|nonOverlappingWindows|instantaneous
-ip.addParameter('timebinSize', 0.001);        % 1ms if user says nothing
+ip.addParameter('samplingPeriod', 0.001);        % 1ms if user says nothing
+ip.addParameter('nSamples', []);        % Overrides samplingPeriod ... number of elements one wants
 ip.addParameter('window', [-0.0005, 0.0005]); % window when using method=overlappingWindow
 ip.addParameter('interpMethod', 'linear'); % Valid only for the instanteous rate method
+ip.addParameter('interpolateQuery', []); % 
 % --------------------------
 % Cleaning
 % --------------------------
@@ -30,6 +32,7 @@ ip.addParameter('removeInactiveCells', true); %
 ip.addParameter('chunkSize', 500);            % if sampling rate, how many times to process each iteration
 % ----- Visualizations ------
 ip.addParameter('ploton', false);             % plots dense firing rate data
+ip.KeepUnmatched = true;
 ip.parse(varargin{:})
 Opt = ip.Results;
 
@@ -70,7 +73,7 @@ switch Opt.method
 
         disp('(Time bin mode)')
         [t_midpoints, t_startends] = util.time.overlapping([Opt.startTime, Opt.endTime], ...
-            Opt.timebinSize, Opt.window)
+            Opt.samplingPeriod, Opt.window)
         windowStarts = t_startends(1,:);
         windowStops = t_startends(2,:);
 
@@ -94,7 +97,7 @@ switch Opt.method
             spikeCountMatrix(i, :) = spikeCountSlice;
             p.step([], [], []);
         end
-        spikeRateMatrix = spikeCountMatrix/Opt.timebinSize;
+        spikeRateMatrix = spikeCountMatrix/Opt.samplingPeriod;
 
     case 'nonOverlappingWindows'
         % 
@@ -108,8 +111,8 @@ switch Opt.method
 
         % Setup time matrices
         % -------------------
-        [t_midpoints, t_startends]  = util.time.nonoverlapping(...
-            [Opt.startTime, Opt.endTime], Opt.timebinSize);
+        [t_midpoints, t_startends]  = units.time.nonoverlapping(...
+            [Opt.startTime, Opt.endTime], Opt.samplingPeriod);
 
         % Densify spikes
         % --------------
@@ -119,7 +122,7 @@ switch Opt.method
             spike_count = histcounts(double(spikes.spikeTimes{i}),...
                 t_startends);
             spikeCountMatrix(i,:) = spike_count;
-            spikeRateMatrix(i,:)  = spike_count/Opt.timebinSize;
+            spikeRateMatrix(i,:)  = spike_count/Opt.samplingPeriod;
         end
 
     case 'instantaneous'
@@ -133,20 +136,24 @@ switch Opt.method
         for iCell = 1:nCells
             ds = diff(spikes.spikeTimes{iCell});
             ds_times{iCell} = spikes.spikeTimes{iCell}(1:end-1) + ds;
-            rates{iCell} = 1/ds;
+            rates{iCell} = 1./ds;
         end
 
         % Now interpolate to our time coordinates
         [t_midpoints, t_startends] =...
-            units.time.nonoverlapping([Opt.startTime, Opt.stopTime]);
+            units.time.nonoverlapping([Opt.startTime, Opt.endTime], Opt.samplingPeriod);
 
         % Interpolate all rates to that grid of points
         for iCell = 1:nCells
-            rates{iCell} = util.interp.interp1(...
-                ds_times{iCell}, rates{iCell}, t_midpoints, Opt.interpMethod);
+            if isempty(ds_times{iCell})
+                rates{iCell} = zeros(size(t_midpoints));
+            else
+                rates{iCell} = util.interp.interp1(...
+                    ds_times{iCell}, rates{iCell}, t_midpoints, Opt.interpMethod);
+            end
         end
         spikeRateMatrix  = cat(1, rates{:});
-        spikeCountMatrix = spikeRateMatrix * mean(diff(midpoints));
+        spikeCountMatrix = spikeRateMatrix * mean(diff(t_midpoints));
 
     otherwise
 
@@ -166,11 +173,7 @@ end
     % Fitler spurious : BUG
     % ---------------
     if Opt.filterSpurious % if it violates 1khz, then rate limit?
-        if ~isempty(Opt.samplingRate)
-            samplingPeriod = 1/Opt.samplingRate;
-        else
-            samplingPeriod = Opt.timebinSize;
-        end
+        samplingPeriod = Opt.samplingPeriod;
         countLimit = (Opt.filterSpurious * (samplingPeriod/1e-3));
         spikeCountMatrix(spikeCountMatrix > countLimit) = 0;
     end
@@ -195,11 +198,11 @@ end
 else
     error("Bad binnedOutput")
 end
+
 spikes.time       = t_midpoints(:);
 spikes.binEdges   = t_startends(:);
-
-spikes.samplingRate = Opt.samplingRate;
-spikes.dt = Opt.timebinSize;
+spikes.samplingRate = Opt.samplingPeriod;
+spikes.dt = Opt.samplingPeriod;
 
 if strcmpi(Opt.returnOutput, 'matrix')
     spikes = spikes.data;
