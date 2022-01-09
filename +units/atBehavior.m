@@ -32,6 +32,9 @@ ip.KeepUnmatched = true; % See atBehavior_singleCell for shuffle instructions
 % Overall format of the inputs
 ip.addParameter('sparse', true);    % whether to expect sparse spike info or dense raster in spikes struct
 
+% Overall format of the outputs
+ip.addParameter('returnIndices', false);
+
 % Essential matching algorithm
 ip.addParameter('shift', 0);                      % Shift spike tines by how much
 ip.addParameter('matchTimeTolerance', 1/20);      % tolerance for a spike time to match a behavior
@@ -48,6 +51,8 @@ ip.addParameter('props', []);                     % List of vars to constrain th
 
 % Table query
 ip.addParameter('query', []);
+
+% Beh variable type
 ip.parse(varargin{:})
 Opt = ip.Results;
 dups = [];
@@ -81,9 +86,11 @@ if istable(beh) && Opt.sparse % SPARSE SPIKE TIMES
     dups = util.getduplicates_logical(beh.time);
     beh = beh(~dups,:);
 
-    spikes.beh = cell(1, numel(spikes.spikeTimes));
+    nNeurons = numel(spikes.spikeTimes);
+    spikes.beh = cell(1, nNeurons);
+    for iCell = progress(1:nNeurons, 'Title', 'Finding behavior per neuron')
 
-    for iCell = progress(1:numel(spikes.spikeTimes), 'Title', 'Finding behavior per neuron')
+        Opt.annotateNeuron = [iCell, nNeurons];
         % PARALLEL VERSION OF SINGLECLEL
         if Opt.useParallel
             if iCell == 1; cluster = parcluster; end
@@ -114,8 +121,7 @@ if istable(beh) && Opt.sparse % SPARSE SPIKE TIMES
 
     % If we have shifts, we neeed to convert the branched cell
     % into a cell with matrix dimensions, 1: neuron x 1: shift
-    keyboard
-    if numel(Opt.shift) > 1
+    if iscell(spikes.beh)
         spikes.beh = cat(1, spikes.beh{:});
         % May have to use something like this if {:} doesn't work
         % -------------------------------------------------------
@@ -138,6 +144,7 @@ elseif isnumeric(beh) || ~Opt.sparse % DENSE RASTER
 end
 
 if restoreStruct
+    error('Code not valid right now')
     for iCell = 1:numel(spikes.spikeTimes)
         spikes.beh{iCell} = table2struct(spikes.beh{iCell});
     end
@@ -156,16 +163,13 @@ if util.struct.isfield(spikes.beh, 'neuron')
     spikes = units.clean.sparse.addMissingNeurons(spikes);
 end
 
-% Merge checksums
-if Opt.mergeOverCells
-    if iscell(spikes.beh)
-        assert(numel(spikes.spikeTimes) == numel(unique(spikes.beh{1}.neuron)));
-    elseif istable(spikes.beh)
-        assert(numel(spikes.spikeTimes) == numel(unique(spikes.beh.neuron)));
-    end
-end
-
 
 % Checksum : Check none of the data is still on the GPU
 assert(~util.table.isGPUtable(spikes.beh), "Fuck! Your table item is on the GPU.")
 
+
+if Opt.returnIndices
+    spikes.behtype = "indices";
+else
+    spikes.behtype = "behavior";
+end

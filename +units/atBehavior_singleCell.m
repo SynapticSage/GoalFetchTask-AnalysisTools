@@ -25,7 +25,7 @@ ip.addParameter('returnIndices', false); % This triggers a behavior where we ret
                                             % if we have shifts, then it's a matrix.
 ip.addParameter('output', 'table'); % {table} | matrix ... ultimately determinse either straightup what we return, eeither a ceell of this type of the type itself
 ip.addParameter('concatShifts', true); %wehther to concatonate the shifts we get at the end of the computation
-ip.addParameter('annotateNeuron', []); % Number for a given neuron
+ip.addParameter('annotateNeuron', []); % Number for a given neuron, if two number, second is the maximum neuron
 ip.addParameter('annotateShift', true); % whether or not to annotate the shift
 ip.parse(varargin{:})
 Opt = ip.Results;
@@ -91,9 +91,6 @@ if spikeTimesExist
         behavior_times = reshape(behavior_times, size(inds)); 
         violations = abs(behavior_times - (spikeTimes(:)+Opt.shift(:)')) > Opt.matchTimeTolerance; 
         for shift = 1:numel(Opt.shift)
-            if Opt.annotateShift
-                spikesBeh{shift} = shift * ones(height(spikesBeh{shift}), 1);
-            end
             switch Opt.violationHandling
                 case 'remove'
                 spikesBeh{shift} = spikesBeh{shift}(~violations(:,shift),:);
@@ -114,9 +111,12 @@ if spikeTimesExist
         violations = abs(beh.time(inds) - spikeTimes(:)) > Opt.matchTimeTolerance;
         switch Opt.violationHandling
             case 'remove'
-            spikeTimes(violations) = nan;
+            %spikeTimes(violations) = nan;
+            spikesBeh(violations, :) = [];
             case 'nan'
-            spikeTimes = spikeTimes(~violations);
+            spikesBeh(violations, :) = nan;
+            otherwise
+                %pass
         end
     end
 
@@ -134,18 +134,6 @@ end
 % -----------------------------
 % (optional) neuron annotation
 % -----------------------------
-if Opt.annotateNeuron
-    if iscell(spikesBeh)
-        for i = 1:numel(spikeBeh)
-            spikesBeh{i} = Opt.annotateNeuron * ones(height(spikesBeh{i}),1);
-        end
-    else
-        for i = 1:numel(spikeBeh)
-            spikesBeh{i} = Opt.annotateNeuron * ones(height(spikesBeh{i}),1);
-        end
-    end
-end
-
 % --------------
 % prepare output
 % --------------
@@ -166,7 +154,7 @@ elseif strcmp(Opt.output, 'table')
     if Opt.returnIndices 
         indicesRange = [1, height(beh)];
         spikesBeh = util.type.castefficient(spikesBeh,...
-            'negativeNan', true, 'minmaxOverrid', indicesRange);
+            'negativeNan', true, 'minmaxOverride', indicesRange);
         if iscell(spikesBeh) && ~istable(spikesBeh{1})
             for i = 1:numel(spikesBeh)
                 spikesBeh{i} = table(spikesBeh{i}, 'VariableNames', "indices");
@@ -178,12 +166,32 @@ elseif strcmp(Opt.output, 'table')
         end
     end
 
-    if Opt.concatShifts
-        for i = 1:numel(spikesBeh)
-            spikesBeh{i}.shift = i * ones(height(spikesBeh{i}), 1);
+    % Add shifts and process shifts
+    if Opt.annotateShift
+        for shift = 1:numel(spikesBeh)
+            spikesBeh{shift}.shift = shift * ones(height(spikesBeh{shift}), 1);
         end
+    end
+    if Opt.concatShifts
         spikesBeh = vertcat(spikesBeh{:});
         spikesBeh.shift = util.type.castefficient(spikesBeh.shift);
+    end
+
+    % Add neuron
+    if Opt.annotateNeuron
+        if iscell(spikesBeh)
+            for i = 1:numel(spikesBeh)
+                spikesBeh{i}.neuron = Opt.annotateNeuron(1) * ones(height(spikesBeh{i}),1);
+            end
+        else
+            spikesBeh.neuron = Opt.annotateNeuron(1) * ones(height(spikesBeh),1);
+        end
+        if numel(Opt.annotateNeuron) == 2
+            V = Opt.annotateNeuron(2);
+        else
+            error('If not give max neuron in addition to actual, can lead to weird casting issues');
+        end
+        spikesBeh.neuron = util.type.castefficient(spikesBeh.neuron, 'minmaxOverride', [1, V]);
     end
 
     if Opt.useGPU
