@@ -29,6 +29,7 @@ ip.addParameter('startShuffle', 1, @isnumeric); % the first shuffle index
 ip.addParameter('endShuffle', [], @isnumeric); % the first shuffle index
 ip.addParameter('shuffleunits', 'unitwise'); % shuffle neurons so that {unitwise}|uniform
 ip.addParameter('shiftstatistic', 'uniform'); % what statistic of shift? {uniform}|normal
+ip.addParameter('shifttype', 'circshift');
 ip.addParameter('width', 'whole'); % draw the 'whole' period of time, or some specified amount or standard deviation
 ip.addParameter('shiftWhat', 'behavior'); % It's equibalent to shift behavior times repeatedly per cell or spike times per cell, but my estimate is that it's less memory intense for behavior
 
