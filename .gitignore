@@ -35,3 +35,4 @@ Statescript/Data/Code_*.m
 *Graph*.fig
 /Statescript/Data/*
 tmp*
+*.vim
