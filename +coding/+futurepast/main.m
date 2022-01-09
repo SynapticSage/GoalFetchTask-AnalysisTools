@@ -53,8 +53,7 @@ for i = progress(1:numel(shufset(:)), 'Title', 'Computing each shift')
 
     % Grab indices
     % ------------
-    if any(strcmp(fieldnames(spikes), 'behtype')) &&...
-            spikes.behtype == "indices"
+    if spikes.behtype == "indices"
         % Type  = index
 
         % Pull data from our shuffle index structure
@@ -68,7 +67,11 @@ for i = progress(1:numel(shufset(:)), 'Title', 'Computing each shift')
         val.neuron = neuron_labels;
     else
         % Type  = actual data, not an index
-        val = val(good_shift_indices);
+        try
+            val = val(good_shift_indices);
+        catch ME
+            warning('Make sure this isnt an index type');
+        end
     end
 
     [fields(i), behField] = ...
