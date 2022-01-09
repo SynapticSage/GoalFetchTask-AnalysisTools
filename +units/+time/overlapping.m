@@ -1,11 +1,12 @@
-function [t_midpoints, t_startends] = overlapping(epochPeriods, samplingPeriod, window)
+function [t_midpoints, t_startends] = overlapping(epochPeriods, varargin)
 
-% Acquire all epoch starts stops
-t_midpoints = arrayfun(...
-    @(i) epochPeriods(i,1):samplingPeriod:epochPeriods(i,2),...
-    1:size(spikes.timePeriods, 1),...
-    'UniformOutput', false);
-t_midpoints = cat(2, t_midpoints{:});
+ip = inputParser;
+ip.addParameter('window', []);
+ip.KeepUnmatched = true;
+ip.parse(varargin{:})
+Opt = ip.Results;
+
+[t_midpoints, ~] = units.time.nonoverlapping(epochPeriods, Opt);
 
 if isscalar(window)
     window = [-window(1)/2, window(2)/2];
