@@ -57,6 +57,7 @@ Opt.shiftstatistic = char(Opt.shiftstatistic);
 Opt.cacheMethod = char(lower(Opt.cacheMethod));
 
 Opt.kws_atBehavior = ip.Unmatched;
+Opt.kws_atBehavior.maxNeuron = numel(spikes.spikeTimes);
 if isempty(Opt.endShuffle)
     Opt.endShuffle = Opt.nShuffle;
 end

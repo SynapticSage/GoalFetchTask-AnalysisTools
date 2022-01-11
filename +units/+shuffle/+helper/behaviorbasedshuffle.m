@@ -1,11 +1,10 @@
 function out = behaviorbasedshuffle(out, shifts, groups, spikes, beh, Opt)
 
 disp("Beginning behavior based shuffle")
-tc = @util.type.castefficient; % shorcut
+nNeurons = height(spikes.cellTable);
 
 % Ready input and output variables
 beh = util.table.castefficient(beh, 'negativeNan', true);
-nNeurons = height(spikes.cellTable);
 original_time = beh.time;
 Opt.preallocationSize = min(Opt.nShuffle, Opt.preallocationSize);
 
@@ -44,6 +43,7 @@ for s = progress(Opt.startShuffle:Opt.preallocationSize:Opt.endShuffle,...
         notSkipProcessingPreviousShuff = ~Opt.skipShuffled || ~pfExist(Opt.outfolder, Opt.parquetfile(prevShuff));
         if (prevShuff ~= -1) && iShuff ~= prevShuff ...
             && notSkipProcessingPreviousShuff
+
             if istable(singleShuffle{1})
                 tmp = util.cell.icat(singleShuffle, 2);
                 assert(numel(tmp) == 1);
@@ -62,19 +62,11 @@ for s = progress(Opt.startShuffle:Opt.preallocationSize:Opt.endShuffle,...
         end
 
         beh.time = squeeze(piece.newtimes(iPreallocShuff, iNeuron, :));
+        Opt.kws_atBehavior.annotateNeuron = iNeuron;
+        Opt.kws_atBehavior.maxNeuron      = nNeurons;
         tmp = ...
             units.atBehavior_singleCell(spikes.spikeTimes{iNeuron}, ...
             beh, Opt.kws_atBehavior);
-        if iscell(tmp)
-            for i = 1:numel(tmp)
-                tmp{i}.neuron  = tc(iNeuron * ones(height(tmp{i}), 1));
-                tmp{i}.shuffle = tc(iShuff * ones(height(tmp{i}), 1));
-                tmp{i}.shift   = tc(i * ones(height(tmp{i}), 1));
-            end
-            tmp = cat(1, tmp{:});
-        else
-            tmp.neuron = tc(iNeuron * ones(height(tmp), 1));
-        end
         singleShuffle{iNeuron} = tmp;
         prevShuff = iShuff;
     end

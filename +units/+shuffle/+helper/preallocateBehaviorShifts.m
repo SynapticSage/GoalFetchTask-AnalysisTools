@@ -13,7 +13,7 @@ Opt = ip.Results;
 newtimes = repmat(shiftdim(beh.time,-2), [S, N]); % make an Shifts x Neuron x Time new record of shifted times
 tic
 
-iscircshift = istrcmp(Opt.shifttype, 'circshift');
+iscircshift = strcmp(Opt.shifttype, 'circshift');
 disp("Using shift type = " + Opt.shifttype);
 
 for s = progress(1:S, 'Title', 'Preallocating shuffle times')

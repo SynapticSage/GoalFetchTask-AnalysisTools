@@ -26,6 +26,7 @@ ip.addParameter('returnIndices', false); % This triggers a behavior where we ret
 ip.addParameter('output', 'table'); % {table} | matrix ... ultimately determinse either straightup what we return, eeither a ceell of this type of the type itself
 ip.addParameter('concatShifts', true); %wehther to concatonate the shifts we get at the end of the computation
 ip.addParameter('annotateNeuron', []); % Number for a given neuron, if two number, second is the maximum neuron
+ip.addParameter('maxNeuron', []); % Number for a given neuron, if two number, second is the maximum neuron
 ip.addParameter('annotateShift', true); % whether or not to annotate the shift
 ip.parse(varargin{:})
 Opt = ip.Results;
@@ -188,6 +189,8 @@ elseif strcmp(Opt.output, 'table')
         end
         if numel(Opt.annotateNeuron) == 2
             V = Opt.annotateNeuron(2);
+        elseif numel(Opt.annotateNeuron) == 1 && ~isempty(Opt.maxNeuron)
+            V = Opt.maxNeuron;
         else
             error('If not give max neuron in addition to actual, can lead to weird casting issues');
         end
@@ -201,4 +204,8 @@ elseif strcmp(Opt.output, 'table')
 
 else
     error("unrecognized return type");
+end
+
+if isa(spikesBeh.neuron, 'uint8') || isa(spikesBeh.neuron, 'int8')
+    warning('int8 neuron can lead to strangh consequences');
 end

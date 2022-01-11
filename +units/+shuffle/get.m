@@ -5,11 +5,15 @@ function [shuffle, data_source] = get(cache_args_OR_cache_obj, iShuff, varargin)
 ip = inputParser;
 ip.addParameter('cacheMethod', 'matfile'); % {matfile} | parquet | ''
 ip.addParameter('debug', false); 
+ip.addParameter('shiftless', false); % when true, if the shuffles have a shift property, this selects the shift=0 seconds portion (unshifted)
 ip.parse(varargin{:})
 Opt = ip.Results;
 
 
 if istable(cache_args_OR_cache_obj)
+    % -----
+    % TABLE
+    % -----
 
     if Opt.debug
         disp("Indexing shuffle out of table");
@@ -22,7 +26,15 @@ if istable(cache_args_OR_cache_obj)
     end
     data_source = [];
 
+    if Opt.shiftless
+        % Never used this before, examine data shape
+        keyboard
+    end
+
 elseif isa(cache_args_OR_cache_obj, 'matlab.io.MatFile')
+    % -------
+    % MATFILE
+    % -------
 
     if Opt.debug
         disp("Pulling struct out of matfile and converting to table");
@@ -33,6 +45,9 @@ elseif isa(cache_args_OR_cache_obj, 'matlab.io.MatFile')
     shuffle = units.shuffle.get(tmp, iShuff, varargin{:});
     
 elseif iscell(cache_args_OR_cache_obj)
+    % --------------
+    % FILE ARGUMENTS
+    % --------------
 
     we_have_cache_args = @(x) isstring(x) || ischar(x);
     if we_have_cache_args(cache_args_OR_cache_obj{1})
