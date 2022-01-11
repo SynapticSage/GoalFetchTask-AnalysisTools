@@ -1,4 +1,4 @@
-function [X, T, run_stats] = rateBy(spikes, by, varargin)
+function [X, T, data] = rateBy(spikes, by, varargin)
 % Creates tensorized rate matrix, where the tensor dimensions encode different
 % categoricals or time variables
 %
@@ -13,6 +13,7 @@ ip.addParameter('sparseOnTheFly', false); % ram friendly
 ip.addParameter('vars_timeChanging', []); %Lowest level can be pure time or pure distance
 ip.addParameter('vars_category', []);
 ip.addParameter('vars_quantile', []);
+ip.addParameter('var_time', 'time'); % only one. the core time variable (could be space instead of time)
 %% Norm-lowest-timeChagning var?
 ip.addParameter('norm_timeChangingLowest', true); % If your trials are not equal time/distance, this has to be true
 %% MODES
@@ -22,13 +23,15 @@ ip.addParameter('warpToFit', 'nope'); % {nope} | dynamic | static
 % where dynamic = dtw and static is simple interpolation squishing to the same size
 ip.addParameter('warpSize', 20); % number of time slots if we're warping
 ip.addParameter('quantileSize', 3); % discretization of quantile variable
+%
+ip.addParameter('verbose', false);
 ip.parse(varargin{:})
 Opt = ip.Results;
 
 Opt.vars_timeChanging = string(Opt.vars_timeChanging);
 Opt.vars_quantile = string(Opt.vars_quantile);
 Opt.vars_category = string(Opt.vars_category);
-run_stats = struct('skip', 0);
+data = struct('skip', 0);
 
 if isempty(Opt.vars_timeChanging)
     error('Must have timeChangingVars')
@@ -40,14 +43,19 @@ cGroups = util.table.findgroups(by, cVars);
 
 % Find quantile grroups
 qVars   = Opt.vars_quantile;
-for qVar = qVars
-    by.(qVar) = util.num.getQuantile(by.(qVar));
-    by.(qVar) = discretize(by.(qVar), Opt.quantileSize);
+if ~isempty(qVars)
+    for qVar = qVars
+        by.(qVar) = util.num.getQuantile(by.(qVar));
+        by.(qVar) = discretize(by.(qVar), Opt.quantileSize);
+    end
+    qGroups = util.table.findgroups(by, qVars);
+else
+    by.unity = ones(height(by), 1);
+    qGroups = util.table.findgroups(by, 'unity');
 end
-qGroups = util.table.findgroups(by, qVars);
 
 % Find temporal grroups
-tVars   = setdiff(Opt.vars_timeChanging, 'time');
+tVars   = setdiff(Opt.vars_timeChanging, Opt.var_time);
 tGroups = util.table.findgroups(by, tVars);
 if ~isempty(Opt.warpSize)
     smallest_time_dim = Opt.warpSize;
@@ -69,6 +77,7 @@ end
 dimsFinal = [cDims, qDims, tDimsFinal, nNeurons];
 X = nan(dimsFinal, 'single');
 Xt = nan([dimsFinal(1:end-1) 1], 'single');
+data.vars = [Opt.vars_category, Opt.vars_quantile, Opt.vars_timeChanging, "time", "neuron"];
 
 for c = progress(cGroups.uGroups', 'Title', 'Categorical groups')
 for q = progress(qGroups.uGroups', 'Title', 'Quantile groups')
@@ -91,7 +100,9 @@ for t = tGroups.uGroups'
 
     minT = min(matchingTimes);
     maxT = max(matchingTimes);
-    disp(maxT - minT);
+    if Opt.verbose
+        disp(maxT - minT);
+    end
 
 
     % if the type of the spike data is sparse,
@@ -109,13 +120,13 @@ for t = tGroups.uGroups'
         x = spikes.data;
         time = spikes.time;
         if numel(t) < Opt.warpSize
-            run_stats.skip = run_stats.skip + 1;
+            data.skip = data.skip + 1;
             continue
         end
     elseif strcmp(spikes.type,'dense')
         selection = util.constrain.minmax(spikes.time, [minT, maxT]);
         if ~sum(selection)
-            run_stats.skip = run_stats.skip + 1;
+            data.skip = data.skip + 1;
             continue
         end
         x = spikes.data(selection,:);
