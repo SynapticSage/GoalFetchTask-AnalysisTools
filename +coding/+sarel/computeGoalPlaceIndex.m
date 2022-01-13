@@ -1,7 +1,6 @@
 function comptueGoalPlaceIndex(spikes, beh,...
          marginal_name, varargin)
-%
-%  
+% computes the goal place index
 
 ip = inputParser;
 ip.parse(varargin{:})

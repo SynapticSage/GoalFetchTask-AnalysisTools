@@ -3,10 +3,10 @@ function outStruct = computeDirectionalityIndex(tuningStruct, angles, angledim, 
 % 
 % Computes directionality index and the theta hat metric
 
-ip = inputParser;
-ip.addParameter('allowNegativeAmplitude', false);
-ip.parse(varargin{:})
-Opt = ip.Results;
+%ip = inputParser;
+%ip.addParameter('allowNegativeAmplitude', false);
+%ip.parse(varargin{:})
+%Opt = ip.Results;
 
 disp("Rayleigh tuning scores");
 outStruct = struct();
@@ -18,5 +18,5 @@ for field = string(fieldnames(tuningStruct))'
 
     [outStruct.(field).directionality_index, ...
         outStruct.(field).directionality_index_Z] = ...
-        coding.sarel.get.goal(tuningStruct.(field), angles, angledim, Opt);
+        coding.sarel.get.goal(tuningStruct.(field), angles, angledim);
 end
