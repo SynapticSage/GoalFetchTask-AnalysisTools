@@ -5,7 +5,8 @@ function [shuffle, data_source] = get(cache_args_OR_cache_obj, iShuff, varargin)
 ip = inputParser;
 ip.addParameter('cacheMethod', 'matfile'); % {matfile} | parquet | ''
 ip.addParameter('debug', false); 
-ip.addParameter('shiftless', false); % when true, if the shuffles have a shift property, this selects the shift=0 seconds portion (unshifted)
+ip.addParameter('shiftless', false); % when true, if the shuffles have a shift property, this selects the shift=0seconds portion (unshifted)
+ip.addParameter('shift', []); % when not empty, this shift index is looked up, instead of returning all
 ip.parse(varargin{:})
 Opt = ip.Results;
 
@@ -26,9 +27,9 @@ if istable(cache_args_OR_cache_obj)
     end
     data_source = [];
 
-    if Opt.shiftless
-        % Never used this before, examine data shape
-        keyboard
+    % lookup a specific shift
+    if ~isempty(Opt.shift)
+        shuffle = shuffle(shuffle.shift == Opt.shift, :);
     end
 
 elseif isa(cache_args_OR_cache_obj, 'matlab.io.MatFile')
@@ -42,7 +43,43 @@ elseif isa(cache_args_OR_cache_obj, 'matlab.io.MatFile')
     end
     tmp = cache_args_OR_cache_obj.shuffle(iShuff,1);
     tmp = struct2table(tmp);
-    shuffle = units.shuffle.get(tmp, iShuff, varargin{:});
+
+    if Opt.shiftless
+        if ~ismember(fieldnames(cache_args_OR_cache_obj), 'zeroshiftIndex')
+            zeroshiftIndex = median(unique(tmp.shift));
+            cache_args_OR_cache_obj.Properties.Writable = true;
+            cache_args_OR_cache_obj.zeroshiftIndex = median(unique(tmp.shift));
+            cache_args_OR_cache_obj.Properties.Writable = false;
+        else
+            zeroshiftIndex = cache_args_OR_cache_obj.zeroshiftIndex;
+        end
+        V = util.struct.varargin2struct(varargin);
+        V.shift = zeroshiftIndex;
+        shuffle = units.shuffle.get(tmp, iShuff, V);
+    else
+        shuffle = units.shuffle.get(tmp, iShuff, varargin{:});
+    end
+
+    % Format the result into an output struct that partially matches
+    % the spikes struct used in all my other functions
+    shuffle = struct('beh', shuffle);
+    if ismember('indices', shuffle.beh.Properties.VariableNames)
+        shuffle.behtype = 'indices';
+        if ~ismember(fieldnames(cache_args_OR_cache_obj), 'uShift')
+            shuffle.uShift = cache_args_OR_cache_obj.uShift;
+        else
+            uShift = unique(shuffle.beh.shift);
+            cache_args_OR_cache_obj.uShift = uShift;
+            shuffle.uShift = uShift;
+        end
+        if ~ismember(fieldnames(cache_args_OR_cache_obj), 'uNeuron')
+            shuffle.uNeuron = cache_args_OR_cache_obj.uNeuron;
+        else
+            uNeuron = unique(shuffle.beh.neuron);
+            cache_args_OR_cache_obj.uNeuron = uNeuron;
+            shuffle.uNeuron = uNeuron;
+        end
+    end
     
 elseif iscell(cache_args_OR_cache_obj)
     % --------------

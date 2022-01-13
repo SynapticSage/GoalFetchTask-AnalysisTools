@@ -20,10 +20,10 @@ ip.addParameter('scaff', []);
 ip.addParameter('props', []);
 ip.addParameter('blocksize', -1);
 ip.addParameter('samplingPeriod', []);
+ip.addParameter('suppressProgress', false);
 ip.parse(varargin{:})
 Opt = ip.Results;
 Opt.props = string(Opt.props);
-
 %% -------------------------
 %% CREATE SHORTCUT VARIABLES
 %% -------------------------
@@ -51,6 +51,21 @@ else
     kws = {};
 end
 
+% --------------
+% COMPUTE FIELDS
+% --------------
+% Which neurons?
+if iscell(S)
+    %uNeuron = 1:numel(S);
+    error("Rest of the code for cell mode is unimplemented")
+else
+    if ismember(fieldnames(spikes), 'uNeuron')
+        uNeuron = spikes.uNeuron;
+    else
+        uNeuron = unique(S.neuron);
+    end
+end
+
 % ----------
 % Scaffold
 % ----------
@@ -70,37 +85,33 @@ nCentersCell = num2cell(nCenters);
 [B, Bsummary, Opt] = coding.field.scaffold2binning(B, scaff, Opt);
 assert(~all(Bsummary.visit_time == 0,'all'), 'Behavior times for all bins are zero')
 
-% --------------
-% COMPUTE FIELDS
-% --------------
-% Which neurons?
-if iscell(S)
-    uNeurons = 1:numel(S);
-    error("Rest of the code for cell mode is unimplemented")
-else
-    uNeurons = unique(S.neuron);
-end
 
 % Prepare to absorb results
 spikeOut = struct(...
-    'spikeCount', nan(max(uNeurons), nCentersCell{:}, kws{:}),...
-    'spikeTime',  nan(max(uNeurons), nCentersCell{:}, kws{:})...
+    'spikeCount', nan(max(uNeuron), nCentersCell{:}, kws{:}),...
+    'spikeTime',  nan(max(uNeuron), nCentersCell{:}, kws{:})...
 );
 
-uOverallBins = unique(S.overall_bin);
-uOverallBins = uOverallBins(~isnan(uOverallBins));
-for neuron = progress(uNeurons')
-
-    % Which entries
-    nfilt  = S.neuron == neuron;
+if Opt.suppressProgress
+    N = uNeuron';
+else
+    N = progress(uNeuron', 'Title' , 'Calculating fields' );
+end
+neurons = gpuArray(S.neuron);
+%overall_bin  = util.type.castefficient(S.overall_bin);
+overall_bin  = S.overall_bin;
+uOverallBins = unique(overall_bin);
+uOverallBins = uOverallBins(~isnan(uOverallBins) & uOverallBins > 0);
+for neuron = N 
 
     %Subset the bin table and the spike table - they are 1 to 1
-    subset    = S(nfilt,:);
-    %binSubset = S(nfilt, :);
+    % Which entries
+    nfilt  = find(neurons == neuron); % somehow for gpu(table), find is 1/3 the time
+    subset    = overall_bin(nfilt);
 
     % Get the distribution of times the neuron falls into all possible explicit
     % bin combinations
-    [N, E] = histcounts(subset.overall_bin, uOverallBins);
+    [N, E] = histcounts(subset, uOverallBins);
     E = double(E);
     E = E(1:end-1);
     clean = E>0;
@@ -132,7 +143,6 @@ spikeOut.FR_occNorm = bsxfun(@rdivide, ...
     spikeOut.spikeCount, shiftdim(Bsummary.visit_time, -1));
 spikeOut.multiunit = Ssummary;
 behOut             = Bsummary;
-
 
 if Opt.useGPU
     spikeOut = util.struct.GPUstruct2struct(spikeOut);

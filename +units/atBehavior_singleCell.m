@@ -140,7 +140,7 @@ end
 % --------------
 if strcmp(Opt.output,'cellmatrix')
 
-    if Opt.concatShifts
+    if Opt.concatShifts && numel(Opt.shift)>1
         spikesBeh = cat(2, spikesBeh{:});
     end
     if ~Opt.returnIndices
@@ -168,12 +168,12 @@ elseif strcmp(Opt.output, 'table')
     end
 
     % Add shifts and process shifts
-    if Opt.annotateShift
+    if Opt.annotateShift && numel(Opt.shift)>1
         for shift = 1:numel(spikesBeh)
             spikesBeh{shift}.shift = shift * ones(height(spikesBeh{shift}), 1);
         end
     end
-    if Opt.concatShifts
+    if Opt.concatShifts && numel(Opt.shift)>1
         spikesBeh = vertcat(spikesBeh{:});
         spikesBeh.shift = util.type.castefficient(spikesBeh.shift);
     end
