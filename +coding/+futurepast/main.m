@@ -36,7 +36,11 @@ end
 if iscell(spikes.beh)
     shufset = 1:numel(spikes.shift);
 else
-    shufset = unique(spikes.beh.shift);
+    if ismember(fieldnames(spikes), 'uShift')
+        shufset = spikes.uShift;
+    else
+        shufset = unique(spikes.beh.shift);
+    end
 end
 
         
@@ -55,16 +59,8 @@ for i = progress(1:numel(shufset(:)), 'Title', 'Computing each shift')
     % ------------
     if spikes.behtype == "indices"
         % Type  = index
-
-        % Pull data from our shuffle index structure
-        good_shift_indices = good_shift_indices & spikes.beh.indices > 0;
-        indices_into_behavior_data = spikes.beh.indices(good_shift_indices);
-        neuron_labels = spikes.beh.neuron(good_shift_indices);
-
-        % Use those to index out behavior at spike times and label those times
-        % for corresponding neurons
-        val = beh(indices_into_behavior_data, :);
-        val.neuron = neuron_labels;
+        val = units.indexToBehavior(spikes.beh, beh,...
+            'good_shift_indices', good_shift_indices);
     else
         % Type  = actual data, not an index
         try
@@ -78,6 +74,7 @@ for i = progress(1:numel(shufset(:)), 'Title', 'Computing each shift')
         coding.field.calc(val, ...
         'props', props, ...
         'beh', beh, ...
+        'suppressProgress', true, ...
         'useGPU', Opt.useGPU, ... % about 80x faster with GPU
         'grid', Opt.grid);
 
