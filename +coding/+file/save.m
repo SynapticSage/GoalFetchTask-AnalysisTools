@@ -4,9 +4,11 @@ function save(animal, index, spikes, varargin)
 
 ip = inputParser;
 ip.addParameter('rawFields', ["data", "spikeTimes", "time", "binEdges", "beh", "shuffle"]);
+ip.addParameter('addRawField', []);
 ip.addParameter('removeAllBut', []);
 ip.addParameter('append', false);
 ip.addParameter('withRaw', false);
+ip.addParameter('filename_full', []);
 ip.parse(varargin{:})
 Opt = ip.Results;
 
@@ -24,7 +26,10 @@ if isempty(index)
 end
 
 if ~Opt.withRaw
-    fields = intersect(Opt.rawFields, string(fieldnames(spikes)));
+    fields = intersect(Opt.rawFields, string(fieldnames(spikes))); 
+    if Opt.addRawField % put a set of raw fields back into the set of fields
+        fields = setdiff(fields, Opt.addRawField);
+    end
     spikes = rmfield(spikes, fields);
 end
 if ~isempty(Opt.removeAllBut)
@@ -38,6 +43,10 @@ else
     appendKws = {};
 end
 
-filename_full = coding.file.filename(animal, index, varargin{:});
+if isempty(Opt.filename_full)
+    filename_full = coding.file.filename(animal, index, varargin{:});
+else
+    filename_full = Opt.filename_full;
+end
 fprintf("\nSaving spikes to %s\n", filename_full);
 save(filename_full, '-struct', 'spikes', '-v7.3', appendKws{:}); 

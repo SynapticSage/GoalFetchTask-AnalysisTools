@@ -86,7 +86,9 @@ toc
 % Combine the fields into a single object
 D = coding.field.combine(fields);
 D.behaviorfield = behField;
-D.shift = spikes.shift;
+if isfield(spikes, 'shift')
+    D.shift = spikes.shift;
+end
 D.MI = coding.futurepast.fieldMI(D.FR_occNorm, ...
                                  D.behaviorfield.visits,...
                                  'shiftdim', 1,... % dimension of time shifts       

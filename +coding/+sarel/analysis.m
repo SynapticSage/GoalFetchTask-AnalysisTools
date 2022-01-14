@@ -27,6 +27,7 @@ sarelKws = struct(...
 % Acquire basic distributions of variables with respect to the goals
 % and computes important indices wrt those tuning curves
 spikes.sarel = coding.sarel.main(spikes, beh, sarelKws);
+util.notify.pushover('Sarel','Finished main data');
 % Compute the following indices, too
 % + Directionality index :: RV
 % + optimal von mises tuning curve
@@ -57,4 +58,5 @@ for iS = progress(1:Opt.nShuffle, 'Title', 'Shuffles')
     % run
     spikes.sarel.shuffle{iS} = coding.sarel.main(item, beh, sarelKws); 
 end
+util.notify.pushover('Sarel','Finished analyzing shuffles');
 

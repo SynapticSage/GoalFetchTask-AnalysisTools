@@ -65,18 +65,22 @@ elseif isa(cache_args_OR_cache_obj, 'matlab.io.MatFile')
     shuffle = struct('beh', shuffle);
     if ismember('indices', shuffle.beh.Properties.VariableNames)
         shuffle.behtype = 'indices';
-        if ~ismember(fieldnames(cache_args_OR_cache_obj), 'uShift')
+        if ismember(fieldnames(cache_args_OR_cache_obj), 'uShift')
             shuffle.uShift = cache_args_OR_cache_obj.uShift;
         else
             uShift = unique(shuffle.beh.shift);
+            cache_args_OR_cache_obj.Properties.Writable = true;
             cache_args_OR_cache_obj.uShift = uShift;
+            cache_args_OR_cache_obj.Properties.Writable = false;
             shuffle.uShift = uShift;
         end
-        if ~ismember(fieldnames(cache_args_OR_cache_obj), 'uNeuron')
+        if ismember(fieldnames(cache_args_OR_cache_obj), 'uNeuron')
             shuffle.uNeuron = cache_args_OR_cache_obj.uNeuron;
         else
             uNeuron = unique(shuffle.beh.neuron);
+            cache_args_OR_cache_obj.Properties.Writable = true;
             cache_args_OR_cache_obj.uNeuron = uNeuron;
+            cache_args_OR_cache_obj.Properties.Writable = false;
             shuffle.uNeuron = uNeuron;
         end
     end

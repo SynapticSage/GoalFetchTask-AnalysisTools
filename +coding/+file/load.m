@@ -10,6 +10,7 @@ ip.addParameter('combine', true); % combine invidual day results (if false, look
 ip.addParameter('variables', {}); % which variables to load; if empty, all
 ip.addParameter('squeeze', []);
 ip.addParameter('shuffle', 'cache'); % whether to cache or load the shuffle file
+ip.addParameter('filename_full', []);
 ip.parse(varargin{:})
 Opt = ip.Results;
 
@@ -29,7 +30,11 @@ if Opt.combine
     % Iteratively load index
     for day = index
         filename = sprintf("checkpoint_index=%s", join(string(day),","));
-        filename_full = coding.file.filename(animal, index);
+        if ~isempty(Opt.filename_full)
+            filename_full = Opt.filename_full;
+        else
+            filename_full = coding.file.filename(animal, index);
+        end
         spikes(day) = load(filename_full, Opt.variables{:});
     end
 

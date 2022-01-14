@@ -40,30 +40,29 @@ else
     error("unimplemented");
 end
 Opt.samplingPeriod = median(diff(B.time));
-
-clear spikes
-Opt.beh = [];
-if Opt.useGPU
-    B = util.table.table2GPUtable(B);
-    S = util.table.table2GPUtable(S);
-    kws = {'gpuArray'};
-else
-    kws = {};
-end
-
-% --------------
-% COMPUTE FIELDS
-% --------------
-% Which neurons?
 if iscell(S)
     %uNeuron = 1:numel(S);
     error("Rest of the code for cell mode is unimplemented")
 else
-    if ismember(fieldnames(spikes), 'uNeuron')
+    if ismember(fieldnames(S), 'uNeuron')
         uNeuron = spikes.uNeuron;
     else
         uNeuron = unique(S.neuron);
     end
+end
+clear spikes
+Opt.beh = [];
+
+% -------------
+% Bring to GPU?
+% -------------
+if Opt.useGPU
+    B = util.table.table2GPUtable(B);
+    S = util.table.table2GPUtable(S);
+    kws = {'gpuArray'};
+    uNeuron = gpuArray(uNeuron);
+else
+    kws = {};
 end
 
 % ----------
@@ -98,8 +97,8 @@ else
     N = progress(uNeuron', 'Title' , 'Calculating fields' );
 end
 neurons = gpuArray(S.neuron);
-%overall_bin  = util.type.castefficient(S.overall_bin);
-overall_bin  = S.overall_bin;
+overall_bin  = util.type.castefficient(S.overall_bin);
+%overall_bin  = S.overall_bin;
 uOverallBins = unique(overall_bin);
 uOverallBins = uOverallBins(~isnan(uOverallBins) & uOverallBins > 0);
 for neuron = N 
@@ -107,7 +106,7 @@ for neuron = N
     %Subset the bin table and the spike table - they are 1 to 1
     % Which entries
     nfilt  = find(neurons == neuron); % somehow for gpu(table), find is 1/3 the time
-    subset    = overall_bin(nfilt);
+    subset = overall_bin(nfilt);
 
     % Get the distribution of times the neuron falls into all possible explicit
     % bin combinations
@@ -119,7 +118,7 @@ for neuron = N
     E = E(clean);
     assert(util.num.fractionQueryMatch(N) >  0);
     spikeOut.spikeCount(neuron, E) = N;
-    spikeOut.spikeTime(neuron, E) =  N * Opt.samplingPeriod; %TODO need to subtract times in the same bin
+    spikeOut.spikeTime(neuron, E) =  single(N) * Opt.samplingPeriod; %TODO need to subtract times in the same bin
     
     % One way to do the TODO above, is this
     % Bin specific calculations
@@ -128,6 +127,7 @@ for neuron = N
     %    uTimes = unique(spikes.beh.time(filt));
     %    spikeOut.spikeTime(neuron, bin) = sum(numel(uTimes)) * samplingPeriod; % Sum of sampling periods that have spikes
     %end
+    
 end
 
 % The only TRUE zero times should be those where the animal visited

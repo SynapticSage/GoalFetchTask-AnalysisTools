@@ -21,7 +21,8 @@ function spikes = analysis(animal, day, spikes, Opt)
 %   - Reference points along goal-directed paths also more future fields?
 
 
-futurepastKws = struct('useGPU', true, 'grid', 2);
+futurepastKws = struct('useGPU', true, 'grid', 15);
+futurepastKws
 
 % -----------------------------------------------
 %     Acquire slice of behavior we'll cook with
@@ -51,10 +52,13 @@ shuffKws = struct('groups', [], 'props', props, 'shift', shift,...
     'preallocationSize', Opt.nShuffle);
 groupby = ["epoch", "period"]; % properties in behavior table to shuffle around
 units.shuffle.conditional_time(beh, spikes, groupby, shuffKws);
-util.tmux.notify('Finished conditional shuffle creation');
+util.notify.pushover('FuturePast','Finished conditional shuffle creation');
 
 %    Get shifted fields for shuffles      
 % ----------------------------------------
+if ~isfield(spikes, 'fp')
+    spikes.fp = struct();
+end
 if isfield(spikes.fp, 'shuffle') && ~iscell(spikes.fp.shuffle)
     spikes.fp = rmfield(spikes.fp, 'shuffle');
 end
@@ -70,9 +74,8 @@ for iS = progress(1:Opt.nShuffle, 'Title', 'Shuffles')
     spikes.fp.shuffle{iS} = coding.futurepast.main(item, beh, props, ...
         futurepastKws); 
 end
-
 spikes.fp.shuffle = cat(1, spikes.fp.shuffle{:});
-util.tmux.notify('Finished computing shifted shuffle effects')
+util.notify.pushover('FuturePast','Finished computing shifted shuffle effects')
 
 % --------------------------------------------------------
 % Easy part: measure the real data and debias with shuffle
@@ -86,7 +89,7 @@ util.tmux.notify('Finished computing shifted shuffle effects')
     'query', Opt.behFilter);
 disp("Starting main FP calculations")
 spikes.fp.main = coding.futurepast.main(spikes, beh, props, futurepastKws);
-util.notify.tmux('Finished computing main data effects')
+util.notify.pushover('FuturePast','Computed main data effects');
 
 % ---------------------------------------------
 % De-biasing the main effect using shuftle data

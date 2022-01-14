@@ -79,7 +79,6 @@ argglobal
 %argdel
 $argadd oh
 tabnew
-tabnew
 tabrewind
 edit analyses.m
 argglobal
@@ -92,41 +91,30 @@ keepjumps 91
 normal! 0
 lcd ~/Code/analysis
 tabnext
-edit ~/Code/analysis/+coding/+sarel/computeContrastIndex.m
-argglobal
-balt ~/Code/analysis/+coding/+sarel/computeMaxMeanIndices.m
-let s:l = 19 - ((18 * winheight(0) + 21) / 43)
-if s:l < 1 | let s:l = 1 | endif
-keepjumps exe s:l
-normal! zt
-keepjumps 19
-normal! 026|
-lcd ~/Code/analysis
-tabnext
 edit ~/Code/analysis/+coding/+field/calc.m
 argglobal
-balt ~/Code/analysis/+coding/+futurepast/main.m
-let s:l = 1 - ((0 * winheight(0) + 17) / 35)
+balt ~/Code/analysis/+coding/+futurepast/analysis.m
+let s:l = 1 - ((0 * winheight(0) + 20) / 40)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
 keepjumps 1
 normal! 0
 lcd ~/Code/analysis
-tabnext 3
+tabnext 2
 badd +8 ~/Code/analysis/+coding/+sarel/computeDirectionalityIndex.m
 badd +0 ~/Code/analysis/oh
-badd +128 ~/Code/analysis/analyses.m
+badd +8 ~/Code/analysis/analyses.m
 badd +0 ~/Code/analysis/+coding/+futurepast/shuffcorrect.asv
-badd +1 ~/Code/analysis/+units/+shuffle/get.m
+badd +81 ~/Code/analysis/+units/+shuffle/get.m
 badd +44 ~/Code/analysis/+units/+shuffle/+helper/behaviorbasedshuffle.m
 badd +1 ~/Code/analysis/+coding/+file/+combineMethods/sarel.m
 badd +1 ~/Code/analysis/+coding/+sarel/main.m
 badd +1 ~/Code/analysis/+coding/+sarel/computeGoalPlaceIndex.m
-badd +40 ~/Code/analysis/+coding/+futurepast/main.m
-badd +97 ~/Code/analysis/+coding/+field/calc.m
+badd +1 ~/Code/analysis/+coding/+futurepast/main.m
+badd +102 ~/Code/analysis/+coding/+field/calc.m
 badd +1 ~/Code/analysis/+coding/+field/scaffold.m
-badd +1 ~/Code/analysis/+coding/+sarel/binning.m
+badd +32 ~/Code/analysis/+coding/+sarel/binning.m
 badd +1 ~/Code/analysis/+coding/+field/scaffold2binning.m
 badd +8 ~/Code/analysis/+coding/+sarel/+helper/workflow.m
 badd +25 ~/Code/analysis/+coding/+sarel/tuning.m
@@ -139,11 +127,15 @@ badd +1 ~/Code/analysis/+coding/+sarel/computeMaxMeanIndices.m
 badd +29 ~/Code/Src_Matlab/ry_Utility/jpca-extension/bin/circ_mean.m
 badd +24 ~/Code/analysis/+units/atBehavior_singleCell.m
 badd +1 ~/Code/analysis/+coding/+sarel/+get/place.m
-badd +22 ~/Code/analysis/+coding/+sarel/computeContrastIndex.m
-badd +60 ~/Code/analysis/+coding/+sarel/analysis.m
-badd +72 ~/Code/analysis/+coding/+futurepast/analysis.m
+badd +19 ~/Code/analysis/+coding/+sarel/computeContrastIndex.m
+badd +30 ~/Code/analysis/+coding/+sarel/analysis.m
+badd +1 ~/Code/analysis/+coding/+futurepast/analysis.m
 badd +2 ~/Code/analysis/+coding/+jercog/analysis.m
 badd +21 ~/Code/analysis/+coding/+sarel/+get/contrast.m
+badd +48 ~/Code/analysis/+coding/+file/save.m
+badd +12 ~/Code/analysis/+coding/+file/load.m
+badd +59 ~/Code/analysis/+units/getRateMatrix.m
+badd +71 ~/Code/analysis/+gbehavior/lookup.m
 if exists('s:wipebuf') && len(win_findbuf(s:wipebuf)) == 0 && getbufvar(s:wipebuf, '&buftype') isnot# 'terminal'
   silent exe 'bwipe ' . s:wipebuf
 endif
