@@ -9,8 +9,16 @@ ip.addParameter('removeAllBut', []);
 ip.addParameter('append', false);
 ip.addParameter('withRaw', false);
 ip.addParameter('filename_full', []);
+ip.addParameter('checkpointActive', {}, @iscell);
 ip.parse(varargin{:})
 Opt = ip.Results;
+
+% Do not save if this isn't an active checkpoint
+if ~coding.file.checkpointActive(Opt.checkpointActive{:})
+    return;
+else
+    disp('Checkpointing...');
+end
 
 if isempty(index)
 
