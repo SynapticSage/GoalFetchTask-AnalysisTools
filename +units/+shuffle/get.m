@@ -7,6 +7,7 @@ ip.addParameter('cacheMethod', 'matfile'); % {matfile} | parquet | ''
 ip.addParameter('debug', false); 
 ip.addParameter('shiftless', false); % when true, if the shuffles have a shift property, this selects the shift=0seconds portion (unshifted)
 ip.addParameter('shift', []); % when not empty, this shift index is looked up, instead of returning all
+ip.addParameter('behFilter',[]); % a logical or set of indices
 ip.parse(varargin{:})
 Opt = ip.Results;
 
@@ -30,6 +31,21 @@ if istable(cache_args_OR_cache_obj)
     % lookup a specific shift
     if ~isempty(Opt.shift)
         shuffle = shuffle(shuffle.shift == Opt.shift, :);
+    end
+
+    % filter by set of valid behaviors (where the set has been
+    % passed in as indices or logical indices)
+    %
+    % this way, users can change speed filtration etc after
+    % the fact
+    if ~isempty(Opt.behFilter)
+        assert(ismember('indices', fieldnames(shuffle)), 'Requires indices');
+        indices = shuffle.indices;
+        if islogical(Opt.behFilter)
+            Opt.behFilter = find(Opt.behFilter);
+        end
+        good_indices = ismember(indices, Opt.behFilter);
+        shuffle = shuffle(good_indices, :);
     end
 
 elseif isa(cache_args_OR_cache_obj, 'matlab.io.MatFile')
@@ -84,6 +100,9 @@ elseif isa(cache_args_OR_cache_obj, 'matlab.io.MatFile')
             shuffle.uNeuron = uNeuron;
         end
     end
+
+    % Lastly, the data_source will continue to be this matfile object
+    data_source = cache_args_OR_cache_obj;
     
 elseif iscell(cache_args_OR_cache_obj)
     % --------------

@@ -1,4 +1,4 @@
-function [out, groups] = shuffle_within_condition(beh, spikes, groupby, varargin)
+function [out, groups] = deprecated_shuffle_within_condition(beh, spikes, groupby, varargin)
 % Circularly shuffles within times per some conditioned group
 %
 %

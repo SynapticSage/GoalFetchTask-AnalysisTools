@@ -1,5 +1,4 @@
-function [spikesBeh, spikeTimes] = ...
-        atBehavior_singleCell(spikeTimes, beh, varargin)
+function spikesBeh = atBehavior_singleCell(spikeTimes, beh, varargin)
 % Handles the single cell time lookup into the behavior (either the behavior
 % properties themselves or the indices of the behavior table that match). It
 % can also handle time shifting those lookups efficiently.
@@ -198,7 +197,6 @@ elseif strcmp(Opt.output, 'table')
     end
 
     if Opt.useGPU
-        spikeTimes = gather(spikeTimes);
         spikesBeh  = util.table.GPUtable2table(spikesBeh);
     end
 

@@ -98,7 +98,7 @@ if istable(beh) && Opt.sparse % SPARSE SPIKE TIMES
             jobs{iCell} = batch(@units.atBehavior_singleCell, 2, {spikes.spikeTimes{iCell}, beh, Opt});
         else
             % NON PARALLEL
-            [spikes.beh{iCell}, spikes.spikeTimes{iCell}] = units.atBehavior_singleCell(spikes.spikeTimes{iCell}, beh, util.struct.update(Opt, ip.Unmatched));
+            spikes.beh{iCell} = units.atBehavior_singleCell(spikes.spikeTimes{iCell}, beh, util.struct.update(Opt, ip.Unmatched));
         end
     end
 
