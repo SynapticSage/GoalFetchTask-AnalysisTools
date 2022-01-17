@@ -9,22 +9,40 @@ function spikes = analyses(animal, day, varargin)
 [animal, day, varargin] = deal('RY16', 36, {});
 
 ip = inputParser;
-ip.addParameter('unit', 'multiunit');                       % Spikes (curated firings) / Multiunit (uncurated firings)
 
-ip.addParameter('shuffleStruct', []);                       % Struct of shuffling instructions (Reruns all analyses requested with sequences of shuffles specified here)
-ip.addParameter('nullMethod', []);
-ip.addParameter('nShuffle', 50);                            % Number of shuffles to generate
-ip.addParameter('upsample', false);                         % Upsample behavior?
+% Characteristics of spikes/behavior data
+ip.addParameter('unit', 'multiunit'); % spikes (curated firings) / Multiunit (uncurated firings)
+ip.addParameter('upsample', false);   % upsample behavior?
 
 % Filtration
-ip.addParameter('behFilter', 'abs($velVec) > 4');           % Query to apply to all behavior
-ip.addParameter('taskFilter', "string($type)==""run""");    % 
+ip.addParameter('behFilter', 'abs($velVec) > 4');           % query to apply to all behavior
+ip.addParameter('taskFilter', "string($type)==""run""");    % query epochs
 ip.addParameter('cellFilter', 'ismember(string($area), ["CA1","PFC"]) & string($tag) ~= "artifcat" & $numspikes > 150'); % 
+
+% Shuffle and null distributions
+ip.addParameter('shuffleStruct', units.shuffle.optargs())   % struct of shuffling instructions (Reruns all analyses requested with sequences of shuffles specified here)
+ip.addParameter('nullMethod', []);
+% Shortcut varargin into shuffleStruct options
+ip.addParameter('nShuffle', []);     % number of shuffles to generate
+ip.addParameter('skipShuffled', []); % whether to skip already computed shuffles
 
 % Analyses
 ip.addParameter('analyses',   ["jercog", "sarel", "dotson"]);
+
+% Checkpointing
+ip.addParameter('checkpoint', 10); % checkpoints if > 1, where number for loops
+                                   % is how often,
+                                   % if logical, skip checkpoints in loops, but
+                                   % checkpoint everywhere else
+
 ip.parse(varargin{:})
 Opt = ip.Results;
+if isempty(Opt.nShuffle)
+     Opt.nShuffle = Opt.shuffleStruct.nShuffle;
+end
+if isempty(Opt.skipShuffled)
+    Opt.skipShuffled = Opt.shuffleStruct.skipShuffled;
+end
 
 %shuffleStructDefault
 
@@ -44,7 +62,7 @@ spikes   = units.getRateMatrix(animal, day,...
     'dense', false,...
     'cellFilter', Opt.cellFilter,...
     'spikeData', spikeDat);
-    clear spikeDat
+clear spikeDat
 
 % ------------------------------------
 % Load previous analyses if they exist
@@ -53,16 +71,19 @@ if coding.file.exist(animal, day)
     spikes = coding.file.load(animal, day, 'appendTo', spikes);
 end
 
-%% -------------------
-%% Null Distributions? 
-% This will create a null distribution and rerun all major analyses with it
-%% -------------------
-if ~isempty(Opt.nullMethod)
-    for method = string(Opt.nullMethod)'
-        null.(method) = coding.nullFiring(spikes.data, 'method', method);
-    end
-    disp(null)
-end
+% ------------------------------------------------------------
+% Pregenerate our shuffled indices we grab per neuron from beh
+% ------------------------------------------------------------
+shuffKws = struct('groups', [],...
+    'shift', shift,...
+    'cacheToDisk', {{animal, day}},...
+    'skipShuffled',  0, ...
+    'returnIndices', 1,...
+    'startShuffle', 1,...
+    'nShuffle', Opt.nShuffle,...
+    'preallocationSize', Opt.nShuffle);
+groupby = ["epoch", "period"]; % properties in behavior table to shuffle around
+units.shuffle.conditional_time(beh, spikes, groupby, shuffKws);
 
 % ========================================
 % ,---.          |                        
@@ -109,6 +130,7 @@ end %sarel
 %       - out-and-back to home
 %       - block of trials
 if ismember("izthak", Opt.analyses)
+
     lfp_metadata = ndb.load(animal, 'lfpmeta'); % TODO
     lfp_metadata = lfp_metadata(...
         lfp_metadata.day == day,:);
@@ -122,4 +144,4 @@ if ismember("izthak", Opt.analyses)
 
 end%fried
 
-coding.file.save(animal, day, spikes, 'append', true);
+coding.file.save(animal, day, spikes, 'append', true, 'checkpointActive', Opt.checkpoint);
