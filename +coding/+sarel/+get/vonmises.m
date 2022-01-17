@@ -17,17 +17,21 @@ Opt = ip.Results;
 % obtain mean angle
 % have to broadcast binnedAngle to rate because circ_mean made a dumb design
 % choice
-meanRateAngle = circ_mean(ones(size(rate)) .* binnedAngle, rate, angledim);
+broadcast = ones(size(rate)) .* shiftdim(binnedAngle, ndims(binnedAngle)-ndims(rate));
+meanRateAngle = circ_mean(broadcast, rate, angledim);
 
 % Setup for size manipulations later. We have an inner-product style dimension
 % and a set of outer-product style dimensions. And we want to know not only
 % what those are, but how long the outer dimensions are if raveled.
 szOuterDims  = [size(rate,1:ndims(rate)-1), 1];
 szInnerOuter = [size(rate,ndims(rate)) prod(szOuterDims)];
+szOuterInner = szInnerOuter(end:-1:1);
 nOuterVars   = szInnerOuter(2);
 
-R = gather(rate(:,:)); 
-B = gather(binnedAngle(:,:));
+ % 1. set outer by inner dims -> 2. gather from GPU and transpose
+R = gather(reshape(rate, szOuterInner))';  
+ % 
+B = gather(reshape(binnedAngle, [], szInnerOuter(1)))'; 
 
 
 % ----
@@ -47,10 +51,14 @@ opt = optimset();
 param_estimates = zeros(nOuterVars, 4);
 fval = zeros(nOuterVars, 1);
 for i = progress(1:nOuterVars)
-    anglesample = B(:, i);
-    ratesample  = R(:,   i);
+    if iscolumn(B)
+        anglesample = B(:);
+    else
+        anglesample = B(:, i);
+    end
+    ratesample  = R(:, i);
     if all(ratesample == 0)
-        param_estimates(:,i) = nan(4, 1);
+        param_estimates(i,:) = nan(1, 4);
     else
         optimfun    = @(X) gather(...
             sqrt(nansum((ratesample - vmfun(X(1), X(2), X(3), X(4), anglesample)).^2))...

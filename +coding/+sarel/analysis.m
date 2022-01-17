@@ -1,5 +1,4 @@
 function spikes = analysis(animal, day, spikes, Opt)
-
 % Notes
 % -------
 % Tuning to angle and distance?
@@ -9,14 +8,16 @@ function spikes = analysis(animal, day, spikes, Opt)
 
 % Perform sarel analyses
 beh = gbehavior.lookup(animal, [], day);
-[spikes, beh, ~] = units.atBehavior(beh, spikes,...
+[spikes, beh_filtered, ~] = units.atBehavior(beh, spikes,...
                                     'merge', true,...
                                     'query', Opt.behFilter);
 
 % For now I'm constraining this, just so that I can complete these analysis
 % faster
 sarelKws = struct(...
-    'split_by',    {{["stopWell"]}},...
+    'beh', beh,...
+    'beh_filtered', beh_filtered, ...
+    'split_by',    {{["neuron", "stopWell"]}},...
     'split_by_name', "stops",...
     'useGPU', true...
     );
@@ -26,7 +27,15 @@ sarelKws = struct(...
 % ----
 % Acquire basic distributions of variables with respect to the goals
 % and computes important indices wrt those tuning curves
-spikes.sarel = coding.sarel.main(spikes, beh, sarelKws);
+X = coding.sarel.main(spikes, sarelKws);
+if ~isfield(spikes, 'sarel')
+    spikes.sarel = X;
+else
+    spikes.sarel = util.struct.update(spikes.sarel, X);
+end
+coding.file.save(animal, day, spikes,...
+    'append', true,...
+    'checkpointActive', {Opt.checkpoint});
 util.notify.pushover('Sarel','Finished main data');
 % Compute the following indices, too
 % + Directionality index :: RV
@@ -44,19 +53,26 @@ spikes.sarel.stops.goalplaceindex = ...
 % ---------
 % SHUFFLES
 % ---------
+
+% If the shuffle struct already exist and not a cell, remove it
 if isfield(spikes.sarel, 'shuffle') && ~iscell(spikes.sarel.shuffle)
     spikes.sarel = rmfield(spikes.sarel, 'shuffle');
 end
+% If field non-existant, create an empty cell
 if ~isfield(spikes.sarel, 'shuffle')
     spikes.sarel.shuffle = {}; 
 end
 
+% Process each shuffle!
+Shuf = {animal, day};
 for iS = progress(1:Opt.nShuffle, 'Title', 'Shuffles')
     % get
-    Shuf = {animal, day};
     [item, Shuf] = units.shuffle.get(Shuf, iS, 'debug', false, 'shiftless', true);
     % run
-    spikes.sarel.shuffle{iS} = coding.sarel.main(item, beh, sarelKws); 
+    spikes.sarel.shuffle{iS} = coding.sarel.main(item, sarelKws); 
+    coding.file.save(animal, day, spikes,...
+        'append', true,...
+        'checkpointActive', {Opt.checkpoint, iS});
 end
 util.notify.pushover('Sarel','Finished analyzing shuffles');
 
