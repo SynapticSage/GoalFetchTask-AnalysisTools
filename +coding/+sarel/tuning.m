@@ -8,6 +8,7 @@ ip.addParameter('anglebins', 18);
 ip.addParameter('distbins',  20);
 ip.addParameter('anglefield', 'currentAngle');
 ip.addParameter('distancefield', 'currentEucDist');
+ip.addParameter('includeGroups', false);
 ip.parse(varargin{:});
 Opt = ip.Results;
 
@@ -75,6 +76,6 @@ out.startWell       = startWell;
 out.currentDistance = currentDistance;
 out.currentAngle    = currentAngle;
 out.cuemem          = cuemem;
-if numel(gs.uGroups) > 1
+if Opt.includeGroups && numel(gs.uGroups) > 1
     out = util.struct.appendgroupfield(out, gs);
 end

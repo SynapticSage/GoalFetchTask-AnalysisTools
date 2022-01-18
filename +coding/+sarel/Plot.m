@@ -1,9 +1,8 @@
 config.clean_string = '$area == "PFC" | $area == "CA1"';
 cellTable = util.table.query(spikes.cellTable, config.clean_string);
 config.sig = 0.05/height(spikes.cellTable);
+sarel = spikes.sarel;
 
-
-                              
 % ,---.,   .,---.|    ,---.,---.   
 % |---||\  ||  _.|    |--- `---.
 % |   || \ ||   ||    |        |
@@ -16,10 +15,9 @@ neurons.N =  height(spikes.cellTable);
 neurons.Npfc =  sum(pfc);
 neurons.Nca1 =  sum(ca1);
 
-
 % ------ OVERALL -----------------------------
 % Q1 : What percent of neurons are angular?
-sigNeurons.all = any(sarel.stops.rayleigh.currentAngle.pval < config.sig,2);
+sigNeurons.all = any(sarel.stops.rayleigh.currentAngle.pval < config.sig,0);
 disp(sum(sigNeurons.all))
 % Q2 : How many goals per neuron?
 sigNeurons = sarel.stops.rayleigh.currentAngle.pval < config.sig;
