@@ -30,3 +30,10 @@ Binning.xCenters = scaffold(1).center;
 Binning.yCenters = scaffold(2).center;
 Binning.xEdges = scaffold(1).edge;
 Binning.yEdges = scaffold(2).edge;
+
+% Centers stored by the names of the tuningCurve fields that they apply to
+Binning.centers.stopWell = Binning.possibleStops;
+Binning.centers.startWell = Binning.possibleStarts;
+Binning.centers.currentDistance = Binning.distCenters;
+Binning.centers.currentAngle = Binning.angleCenters;
+Binning.centers.cuemem = Binning.possibleCuemem;

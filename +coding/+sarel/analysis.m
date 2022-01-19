@@ -46,9 +46,9 @@ util.notify.pushover('Sarel','Finished main data');
 
 % Computes goal indices in conjuction with shuffles
 spikes.sarel.ground.goalplaceindex = ...
-    coding.sarel.computerGoalPlaceIndex(spikes, beh, 'ground');
+    coding.sarel.metric.goalPlaceIndex(spikes, beh, 'ground');
 spikes.sarel.stops.goalplaceindex = ...
-    coding.sarel.computerGoalPlaceIndex(spikes, beh, 'stops');
+    coding.sarel.metric.goalPlaceIndex(spikes, beh, 'stops');
 
 % ---------
 % SHUFFLES

@@ -1,6 +1,8 @@
-function [directionality_index, directionality_index_Z] = goal(rate,...
+function [directionality_index, directionality_index_Z] = rayleigh(rate,...
     binnedAngle, angledim)
+% 
 % sarel.index.goal computes rayleigh vector
+%
 
 if nargin < 3
     angledim = 2;

@@ -1,19 +1,32 @@
 function comparison = compare(sarel, varargin)
 % compares shuffle to main data in the sarel struct
+%
+% Input
+% Struct details
+%   | Levels     | Purpose                                     |
+%   |------------+---------------------------------------------+
+%   | splits     | ways of splitting time length               |
+%   |            | to measure tuning curves                    |
+%   |            |                                             |
+%   | datafields | the main tuning curve types                 |
+%   |            |                                             |
+%   | metrics    | *measurements* done on tuning curves        |
+%   |            |                                             |
+%   | stats      | further measures done either on metrics     |
+%   |            | or main/shuffle of tuning curves or metrics |
 
-ip = inputParser;
+ip = coding.sarel.helper.mainStructInputParser();
 ip.addParameter('method', @minus);
-ip.addParameter('measures', ["vm", "occNorm", "rayleigh", "maxmean_indices"]);
 ip.parse(varargin{:})
 Opt = ip.Results;
 
-first = struct('type', '()', 'subs', {{[1]}});
-datafields = @(x) util.struct.matchingfields(x,...
+first = struct('type', '()', 'subs', {{1}});
+tuning_curveFields = @(x) util.struct.matchingfields(x,...
     'logic', 'or',...
     'keyConditions', {@(y) subsref(isstrprop(y, 'lower'), first)},...
     'valueConditions', {@(y) ~isstruct(y)});
 
-measures = @(x) util.struct.matchingfields(x,...
+metricFields = @(x) util.struct.matchingfields(x,...
     'logic', 'or',...
     'keyConditions', {@(y) all(isstrprop(y, 'lower'))},...
     'valueConditions', {@(y) isstruct(y)});
@@ -21,17 +34,17 @@ measures = @(x) util.struct.matchingfields(x,...
 comparison = struct();
 
 % Iterate the splits
-splits = datafields(sarel);
-for split = splits
+splits = tuning_curves(sarel);
+for split = setdiff(splits,"shuffle")
 
     S = sarel.(split);
-    metrics = intersect(measures(S), Opt.measures);
+    metrics = intersect(metricFields(S), Opt.metrics);
 
-    for datafield = datafields(S)
-        compare.(datafield) = shufstat(sarel, [split, datafield]);
+    for tuning_curve = tuning_curveFields(S)
+        comparison.(tuning_curve) = coding.sarel.shuffle.stat(sarel, [split, tuning_curve]);
         for metric = metrics
-            compare.(metric).(datafield) = shufstat(sarel, [split, metric, datafield]);
+            if ~isfield(S.(metric), tuning_curve); continue; end
+            comparison.(metric).(tuning_curve) = coding.sarel.shuffle.stat(sarel, [split, metric, tuning_curve]);
         end
     end
-
 end

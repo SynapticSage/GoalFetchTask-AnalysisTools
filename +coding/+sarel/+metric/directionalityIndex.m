@@ -18,5 +18,5 @@ for field = string(fieldnames(tuningStruct))'
 
     [outStruct.(field).directionality_index, ...
         outStruct.(field).directionality_index_Z] = ...
-        coding.sarel.get.goal(tuningStruct.(field), angles, angledim);
+        coding.sarel.computation.rayleigh(tuningStruct.(field), angles, angledim);
 end

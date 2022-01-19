@@ -21,7 +21,7 @@ for margStName = getFieldnames(Struct)
 
     % Grab the field and geet its marginals
     marginalStruct = Struct.(margStName);
-    marginals = coding.sarel.table.findmarginals(margStName);
+    marginals = coding.sarel.table.field.findmarginals(margStName);
     if isempty(marginals)
         continue
     end

@@ -53,3 +53,11 @@ disp(sum(sigNeurons))
 %Distance
 
 
+
+% Quickly testing shuffle significance
+C = coding.sarel.shuffle.compare(sarel);
+x='stopWell'; 
+mean(C.occNorm.(x).meanDifferences > sqrt(C.occNorm.(x).varDifferences),'all')/sqrt(50)
+mean(C.rayleigh.currentAngle.directionality.meanDifferences > sqrt(C.rayleigh.currentAngle.directionality.varDifferences),'all')/sqrt(50)
+mean(any(C.rayleigh.currentAngle.directionality.meanDifferences > sqrt(C.rayleigh.currentAngle.directionality.varDifferences),2),'all')/sqrt(50)
+size(C.rayleigh.currentAngle.directionality.meanDifferences)
