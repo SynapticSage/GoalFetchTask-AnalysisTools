@@ -1,4 +1,4 @@
-function spikes = analyses(animal, day, varargin)
+function [spikes, Opt] = analyses(animal, day, varargin)
 % function stats = coordcentric(animal, day, varargin)
 %
 % This function organizes all of the goal- and future- coding measurements
@@ -6,50 +6,7 @@ function spikes = analyses(animal, day, varargin)
 %
 % Until this file works cradle to grave, I'm running it as if it were a script.
 
-[animal, day, varargin] = deal('RY16', 36, {});
-
-ip = inputParser;
-
-% Characteristics of spikes/behavior data
-ip.addParameter('unit', 'multiunit'); % spikes (curated firings) / Multiunit (uncurated firings)
-ip.addParameter('upsample', false);   % upsample behavior?
-
-% Filtration
-ip.addParameter('behFilter', 'abs($velVec) > 4');           % query to apply to all behavior
-ip.addParameter('taskFilter', "string($type)==""run""");    % query epochs
-ip.addParameter('cellFilter', 'ismember(string($area), ["CA1","PFC"]) & string($tag) ~= "artifcat" & $numspikes > 150'); % 
-
-% Shuffle and null distributions
-ip.addParameter('shuffleStruct', units.shuffle.optargs())   % struct of shuffling instructions (Reruns all analyses requested with sequences of shuffles specified here)
-ip.addParameter('nullMethod', []);
-% Shortcut varargin into shuffleStruct options
-ip.addParameter('nShuffle', []);     % number of shuffles to generate
-ip.addParameter('skipShuffled', []); % whether to skip already computed shuffles
-
-% Analyses
-ip.addParameter('analyses',   ["jercog", "sarel", "dotson"]);
-
-% Checkpointing
-ip.addParameter('checkpoint', 10); % checkpoints if > 1, where number for loops
-                                   % is how often,
-                                   % if logical, skip checkpoints in loops, but
-                                   % checkpoint everywhere else
-
-ip.parse(varargin{:})
-Opt = ip.Results;
-if isempty(Opt.nShuffle)
-     Opt.nShuffle = Opt.shuffleStruct.nShuffle;
-end
-if isempty(Opt.skipShuffled)
-    Opt.skipShuffled = Opt.shuffleStruct.skipShuffled;
-end
-
-%shuffleStructDefault
-
-% ------------------
-% Get the path setup
-% ------------------
-addpath(genpath('~/Code/analysis'))
+Opt = gfmOptargs(varargin{:});
 
 % -------------
 % Get Unit data
@@ -73,17 +30,18 @@ end
 
 % ------------------------------------------------------------
 % Pregenerate our shuffled indices we grab per neuron from beh
+% (these shuffles are used for all analyses below)
 % ------------------------------------------------------------
-shuffKws = struct('groups', [],...
-    'shift', shift,...
-    'cacheToDisk', {{animal, day}},...
-    'skipShuffled',  0, ...
-    'returnIndices', 1,...
-    'startShuffle', 1,...
-    'nShuffle', Opt.nShuffle,...
-    'preallocationSize', Opt.nShuffle);
-groupby = ["epoch", "period"]; % properties in behavior table to shuffle around
-units.shuffle.conditional_time(beh, spikes, groupby, shuffKws);
+if ~isempty(Opt.shuffleStruct)
+    tmp = struct('groups', [],...
+        'cacheToDisk', {{animal, day}},...
+        'shift', Opt.shift,...
+        'returnIndices', 1);
+    Opt.shuffleStruct = util.struct.update(Opt.shuffleStruct, tmp); clear tmp;
+    groupby = ["epoch", "period"]; % properties in behavior table to shuffle around
+    beh = gbehavior.lookup(animal, [], day);
+    units.shuffle.shuffleWithinConditions(beh, spikes, groupby, Opt.shuffleStruct);
+end
 
 % ========================================
 % ,---.          |                        
@@ -144,4 +102,7 @@ if ismember("izthak", Opt.analyses)
 
 end%fried
 
-coding.file.save(animal, day, spikes, 'append', true, 'checkpointActive', Opt.checkpoint);
+if ~isempty(Opt.analyses)
+    coding.file.save(animal, day, spikes,...
+        'append', true, 'checkpointActive', Opt.checkpoint);
+end

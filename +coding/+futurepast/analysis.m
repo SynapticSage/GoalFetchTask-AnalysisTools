@@ -41,19 +41,6 @@ shift = -1:0.1:1;
 % Hard part: the shuffle
 % -------------------------
 
-% Pregenerate our shuffled indices we grab per neuron from beh
-% ------------------------------------------------------------
-shuffKws = struct('groups', [], 'props', props, 'shift', shift,...
-    'cacheToDisk', {{animal, day}},...
-    'skipShuffled',  0, ...
-    'returnIndices', 1,...
-    'startShuffle', 1,...
-    'nShuffle', Opt.nShuffle,...
-    'preallocationSize', Opt.nShuffle);
-groupby = ["epoch", "period"]; % properties in behavior table to shuffle around
-units.shuffle.conditional_time(beh, spikes, groupby, shuffKws);
-util.notify.pushover('FuturePast','Finished conditional shuffle creation');
-
 %    Get shifted fields for shuffles      
 % ----------------------------------------
 if ~isfield(spikes, 'fp')
@@ -66,10 +53,11 @@ if ~isfield(spikes.fp, 'shuffle')
     spikes.fp.shuffle = {}; 
 end
 
+behFilt = gbehavior.query(beh, Opt.behFilter);
 for iS = progress(1:Opt.nShuffle, 'Title', 'Shuffles')
     % get
     Shuf = {animal, day};
-    [item, Shuf] = units.shuffle.get(Shuf, iS, 'debug', false);
+    [item, Shuf] = units.shuffle.get(Shuf, iS, 'debug', false, 'behFilt', behFilt);
     % run
     spikes.fp.shuffle{iS} = coding.futurepast.main(item, beh, props, ...
         futurepastKws); 
@@ -81,7 +69,7 @@ util.notify.pushover('FuturePast','Finished computing shifted shuffle effects')
 % Easy part: measure the real data and debias with shuffle
 % --------------------------------------------------------
 % Meausre the real data
-[spikes, beh, ~] = units.atBehavior(beh, spikes,...
+[spikes, beh_filtered, ~] = units.atBehavior(beh, spikes,...
     'useGPU', false,....
     'merge',  false,...
     'returnIndices', true, ...
@@ -94,4 +82,4 @@ util.notify.pushover('FuturePast','Computed main data effects');
 % ---------------------------------------------
 % De-biasing the main effect using shuftle data
 % ---------------------------------------------
-spikes.fp.main = coding.futurepast.shuffcorrect(spikes.fp);
+x = coding.futurepast.shuffcorrect(spikes.fp);
