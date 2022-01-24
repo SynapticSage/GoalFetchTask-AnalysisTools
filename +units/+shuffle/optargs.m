@@ -8,9 +8,8 @@ ip.KeepUnmatched = true; % Any unmatched go to the called method units.atBehavio
 % Quantity and range of shuffles
 ip.addParameter('nShuffle', 50, @isnumeric);
 ip.addParameter('skipShuffled', false);         % requires a cacheToDisk scenario: if true, if it detects an existing shuffle at that index on the disk, it skips
-ip.addParameter('startShuffle', 1, @isnumeric); % the first shuffle index
-ip.addParameter('endShuffle', [], @isnumeric);  % the first shuffle index
-
+ip.addParameter('startShuffle', 1, @isnumeric); % the first shuffle index ip.addParameter('endShuffle', [], @isnumeric);  % the first shuffle index
+ip.addParameter('endShuffle', [], @isnumeric); % last shuffle
 % HOW do we shift?
 ip.addParameter('shuffleunits', 'unitwise');  % shuffle neurons so that {unitwise}|uniform
 ip.addParameter('shiftstatistic', 'uniform'); % what statistic of shift? {uniform}|normal

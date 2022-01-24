@@ -1,4 +1,4 @@
-function [out, groups] = conditional_time(beh, spikes, groupby, varargin)
+function [out, groups] = shuffleWithinConditions(beh, spikes, groupby, varargin)
 % Circularly shuffles within times per some conditioned group
 %
 %
@@ -24,6 +24,10 @@ function [out, groups] = conditional_time(beh, spikes, groupby, varargin)
 % --------------------------------------------------------------
 Opt = units.shuffle.optargs(varargin{:});
 Opt.kws_atBehavior.maxNeuron = numel(spikes.spikeTimes);
+Opt.shufflename = sprintf('shuffleWithinConditions=[%s]', ...
+    join(groupby, "-"));
+Opt.shufflename = string(Opt.shufflename);
+    
 
 if ~isempty(Opt.props)
     Opt.props = union("time", string(Opt.props));
@@ -56,6 +60,8 @@ assert(checksum, 'Non-contiguous regions in your conditionals!')
 
 measure = units.shuffle.helper.measuretimeperiods(beh, groups);
 shifts = units.shuffle.helper.calculateshifts(spikes, groups, measure, Opt);
+
+% Prepare the output structure and document our settings
 [out, Opt] = units.shuffle.helper.prepareOuts(spikes, groupby, shifts, groups,  Opt);
 
 % -------
@@ -63,6 +69,10 @@ shifts = units.shuffle.helper.calculateshifts(spikes, groups, measure, Opt);
 % -------
 switch Opt.shiftWhat
     case 'behavior'
+        % if matfile cache, then input(out) gets filed under out.shuffle,
+        % i.e., out.shuffle = out, on the output end
+        %
+        % potentially confusing, I must admit
         out = units.shuffle.helper.behaviorbasedshuffle(out, shifts, groups, spikes, beh, Opt);
     case 'spikes'
 end
@@ -70,6 +80,3 @@ end
 if isfield(out, 'beh') && iscell(out.beh) && istable(out.beh{1})
     out.beh = util.table.icat(out.beh);
 end
-
-out = units.shuffle.helper.documentShuffle(out, Opt); % add metadata
-

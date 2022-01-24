@@ -62,6 +62,9 @@ for s = progress(Opt.startShuffle:Opt.preallocationSize:Opt.endShuffle,...
         end
 
         beh.time = squeeze(piece.newtimes(iPreallocShuff, iNeuron, :));
+        if ~util.isunique(beh.time)
+            keyboard
+        end
         Opt.kws_atBehavior.annotateNeuron = iNeuron;
         Opt.kws_atBehavior.maxNeuron      = nNeurons;
         tmp = ...

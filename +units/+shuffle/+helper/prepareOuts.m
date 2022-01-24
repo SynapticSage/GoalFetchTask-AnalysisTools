@@ -24,7 +24,7 @@ if isempty(Opt.outfolder)
     end
 end
 
-refreshCache = (~Opt.skipShuffled || Opt.startShuffle ~= 1);
+refreshCache = (~Opt.skipShuffled && Opt.startShuffle ~= 1);
 
 if strcmp(Opt.cacheMethod, 'parquet') && refreshCache
     disp("Refreshing parquet cache")
@@ -47,12 +47,15 @@ case 'parquet'
 otherwise
     out = struct();
 end
+out.groupby = groupby;
 out.Groups = groups;
 out.nShuffle = Opt.nShuffle;
 out.nNeurons = height(spikes.cellTable);
 out.nGroups  = groups.nGroups;
-out.groupby = groupby;
 out.shifts = shifts;
+out.shifttype = Opt.shifttype;
+out.shiftWhat = Opt.shiftWhat;
+out.shiftstatistic = Opt.shiftstatistic;
+out.shufflename = Opt.shufflename;
 out.Opt = Opt;
-
 toc
