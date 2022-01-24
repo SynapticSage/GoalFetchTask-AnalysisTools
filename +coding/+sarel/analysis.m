@@ -1,4 +1,4 @@
-function spikes = analysis(animal, day, spikes, Opt)
+function [spikes, tab] = analysis(animal, day, spikes, Opt)
 % Notes
 % -------
 % Tuning to angle and distance?
@@ -75,4 +75,17 @@ for iS = progress(1:Opt.nShuffle, 'Title', 'Shuffles')
         'checkpointActive', {Opt.checkpoint, iS});
 end
 util.notify.pushover('Sarel','Finished analyzing shuffles');
+
+% ---------------------------------------------
+% Main measurements: Make analyzable structures
+% ---------------------------------------------
+tab = spikes.sarel.table(spikes.sarel);
+coding.sarel.table.save(Out, 'target', 'csv');
+
+% ---------------------------------------------
+% Shuffle comparisons: Make analyzable structures
+% ---------------------------------------------
+Out = coding.sarel.shuffle.compare(spikes.sarel, 'onlyShuffle', false);
+tab = coding.sarel.table(Out);
+coding.sarel.table.save(Out, 'target', 'csv', 'tag', 'shuffle');
 

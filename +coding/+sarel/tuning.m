@@ -9,6 +9,7 @@ ip.addParameter('distbins',  20);
 ip.addParameter('anglefield', 'currentAngle');
 ip.addParameter('distancefield', 'currentEucDist');
 ip.addParameter('includeGroups', false);
+ip.addParameter('dimensions', string([])); % names of dimension (string usually)
 ip.parse(varargin{:});
 Opt = ip.Results;
 
@@ -76,6 +77,10 @@ out.startWell       = startWell;
 out.currentDistance = currentDistance;
 out.currentAngle    = currentAngle;
 out.cuemem          = cuemem;
+if isempty(Opt.dimension)
+    Opt.dimension = 1:ndims(stopWell);
+end
+out.Dimensions      = Opt.dimensions;
 if Opt.includeGroups && numel(gs.uGroups) > 1
     out = util.struct.appendgroupfield(out, gs);
 end

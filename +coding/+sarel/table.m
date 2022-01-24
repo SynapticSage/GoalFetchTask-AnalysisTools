@@ -1,4 +1,4 @@
-function Out = table(sarel)
+function Out = table(sarel, varargin)
 % Creates a tidy data table about goal vector analyses
 %
 % needed for ggplot-spirited visuals
@@ -40,39 +40,52 @@ function Out = table(sarel)
 %  -----
 %  This method shares much of its logic with sarel.shuffle.compare
 
-first = struct('type', '()', 'subs', {{1}});
-tuning_curveFields = @(x) util.struct.matchingfields(x,...
-    'logic', 'or',...
-    'keyConditions', {@(y) subsref(isstrprop(y, 'lower'), first)},...
-    'valueConditions', {@(y) ~isstruct(y)});
-metricFields = @(x) util.struct.matchingfields(x,...
-    'logic', 'or',...
-    'keyConditions', {@(y) all(isstrprop(y, 'lower'))},...
-    'valueConditions', {@(y) isstruct(y)});
+ip = coding.sarel.helper.mainStructInputParser();
+ip.parse(varargin{:});
+Opt = ip.Results;
 
-splits = tuning_curves(sarel);
+first = struct('type', '()', 'subs', {{1}});
+%tuning_curveFields = @(x) util.struct.matchingfields(x,...
+%    'logic', 'and',...
+%    'keyConditions', {@(y) subsref(isstrprop(y, 'lower'), first)},...
+%    'valueConditions', {@(y) ~isstruct(y)});
+tuning_curveFields = @(x) util.struct.matchingfields(x,...
+    'logic', 'and',...
+    'keyConditions', {@(x) ismember(x, coding.sarel.table.field.tuningCurves)});
+metricFields = @(x) util.struct.matchingfields(x,...
+    'logic', 'and',...
+    'keyConditions', {@(y) subsref(isstrprop(y, 'lower'), first)},...
+    'valueConditions', {@(y) isstruct(y)});
+splitFields = metricFields;
+
+Out = struct();
+splits = splitFields(sarel);
 for split = setdiff(splits, "shuffle")
 
     S = sarel.(split);
     metrics = intersect(metricFields(S), Opt.metrics);
 
-    Out.(split) = table();
     for tuning_curve = tuning_curveFields(S)
+        clear Metrics
+        Out.(split).(tuning_curve) = table();
 
         % Add any raw level data
-        Metrics.raw = coding.sarel.shuffle.stat(sarel, [split, tuning_curve]);
-        descriptors = struct('metric', 'raw', 'tuning_curve', tuning_curve);
+        Metrics.raw = coding.sarel.table.stat(sarel, [split, tuning_curve]);
+        descriptors = struct('tuning_curve', tuning_curve);
 
         % Add metric level data
         for metric = metrics
             if ~isfield(S.(metric), tuning_curve); continue; end
             Metrics.(metric) = coding.sarel.table.stat(sarel,...
                 [split, metric, tuning_curve]);
+
         end
 
-        descriptors.Dimensions = util.table.dimension(Metrics.raw, ...
-            sarel.Binning, S.Dimensions);
+        %if numel(S.Dimensions) > 2; keyboard; end
+        descriptors.Dimensions = coding.sarel.table.dimension(Metrics.raw, ...
+            sarel.Binning, S.Dimensions, tuning_curve);
 
-        Out.(split) = coding.sarel.table.append(Out.(split), Metrics, descriptors);
+        Out.(split).(tuning_curve) = coding.sarel.table.append(Out.(split).(tuning_curve), Metrics, descriptors);
+        keyboard
     end
 end

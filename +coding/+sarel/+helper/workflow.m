@@ -7,8 +7,8 @@ tic
 %% Tuning Curves %%
 %% ------------- %%
 % For every combination of fields, histcount the major variables
+Opt.Dimensions = [fields, "bins"];
 out = coding.sarel.tuning(spikes, fields, Binning, Opt);
-out.Dimensions = [fields, "bins"];
 out = coding.sarel.occupancyNormalize(out, Opt.occupancy);
 
 

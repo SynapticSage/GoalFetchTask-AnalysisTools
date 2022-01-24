@@ -1,4 +1,4 @@
-function tab = append(previous_tab, Metrics, Description)
+function tab = append(previous_tab, Metrics, Description, varargin)
 % Appends to a split table
 %
 % see coding.sarel.table()
@@ -21,22 +21,37 @@ function tab = append(previous_tab, Metrics, Description)
 %                   telling us the meaning of the tensor
 %                   grid of these variables
 
+ip = inputParser;
+ip.addParameter('includeMetricName', false);
+ip.parse(varargin{:})
+Opt = ip.Results;
 
-
-for d = fieldnames(Description.Dimensions)
+for d = string(fieldnames(Description.Dimensions))'
     tab.(d) = Description.Dimensions.(d);
 end
 
-for d = setdiff(fieldnames(Description), "Dimensions")'
-    tab.(d) = Description.(d);
+for d = string(setdiff(fieldnames(Description), "Dimensions"))'
+    if ischar(Description.(d)) || iscellstr(Description.(d))
+        tab.(d) = string(Description.(d));
+    else
+        tab.(d) = Description.(d);
+    end
 end
 
-for metric = string(fieldnames(Metrics)')
+
+if Opt.includeMetricName
+    Metrics = nd.fullyUnnest(Metrics);
+end
+for metric = string(fieldnames(Metrics))'
     if ~isstruct(Metrics.(metric))
-        tab.(metric) = Metrics.(metric);
+        if isnumeric(Metrics.(metric))
+            tab.(metric) = Metrics.(metric);
+        elseif ischar(Metrics.(metric)) || iscellstr(Metrics.(metric))
+            tab.(metric) = string(Metrics.(metric));
+        end
     else
-        for field = string(fieldnames(tab.(metric)))'
-            tab.(metric + "_" + field) = Metrics.(metric);
+        for field = string(fieldnames(Metrics.(metric)))'
+            tab.(metric + "_" + field) = Metrics.(metric).(field);
         end
     end
 end
@@ -44,6 +59,6 @@ end
 % broadcast the fields (in a pythonic sense)
 tab = nd.broadcast(tab);
 % and apply the ravel function
-tab = nd.apply(tab, @(x) x(:));
+tab = structfun(@(x) x(:), tab, 'UniformOutput', false);
 tab = struct2table(tab);
 tab = [previous_tab; tab];

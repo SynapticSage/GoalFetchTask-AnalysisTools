@@ -17,6 +17,7 @@ function comparison = compare(sarel, varargin)
 
 ip = coding.sarel.helper.mainStructInputParser();
 ip.addParameter('method', @minus);
+ip.KeepUnmatched = true;
 ip.parse(varargin{:})
 Opt = ip.Results;
 
@@ -34,17 +35,22 @@ metricFields = @(x) util.struct.matchingfields(x,...
 comparison = struct();
 
 % Iterate the splits
-splits = tuning_curves(sarel);
+splits = tuning_curveFields(sarel);
 for split = setdiff(splits,"shuffle")
 
     S = sarel.(split);
     metrics = intersect(metricFields(S), Opt.metrics);
 
     for tuning_curve = tuning_curveFields(S)
-        comparison.(tuning_curve) = coding.sarel.shuffle.stat(sarel, [split, tuning_curve]);
+        C.(tuning_curve) = coding.sarel.shuffle.stat(sarel, [split, tuning_curve]);
+        C.Dimensions = coding.sarel.shuffle.stat(sarel, [split, "Dimensions"]);
         for metric = metrics
             if ~isfield(S.(metric), tuning_curve); continue; end
-            comparison.(metric).(tuning_curve) = coding.sarel.shuffle.stat(sarel, [split, metric, tuning_curve]);
+            C.(metric).(tuning_curve) = coding.sarel.shuffle.stat(sarel, [split, metric, tuning_curve], ip.Unmatched);
         end
     end
+
+    comparison.(split) = C;
 end
+
+comparison.Binning = sarel.Binning;
