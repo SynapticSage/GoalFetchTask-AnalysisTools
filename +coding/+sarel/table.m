@@ -86,6 +86,5 @@ for split = setdiff(splits, "shuffle")
             sarel.Binning, S.Dimensions, tuning_curve);
 
         Out.(split).(tuning_curve) = coding.sarel.table.append(Out.(split).(tuning_curve), Metrics, descriptors);
-        keyboard
     end
 end

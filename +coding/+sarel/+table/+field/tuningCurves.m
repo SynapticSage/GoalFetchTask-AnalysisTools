@@ -1,3 +1,3 @@
 function standardFields = tuningCurves()
 
-standardFields = ["currentAngle", "currentDistance", "stops", "starts", "cuemem"];
+standardFields = ["currentAngle", "currentDistance", "stopWell", "startWell", "cuemem"];

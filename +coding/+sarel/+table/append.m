@@ -57,6 +57,7 @@ for metric = string(fieldnames(Metrics))'
 end
 
 % broadcast the fields (in a pythonic sense)
+temp = tab;
 tab = nd.broadcast(tab);
 % and apply the ravel function
 tab = structfun(@(x) x(:), tab, 'UniformOutput', false);

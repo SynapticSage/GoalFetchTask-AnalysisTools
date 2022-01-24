@@ -22,12 +22,14 @@ end
 for target = Opt.target
     switch Opt.target{1}
         case 'matlab'
-            save(fullfile(datafolder, 'goal-vector_matlab%s.mat', Opt.tag), '-struct', 'tabStruct');
+            filepath = fullfile(datafolder, 'goal-vector_matlab%s.mat', Opt.tag);
+            save(filepath, '-struct', 'tabStruct');
         case 'csv'
             for split = string(fieldnames(tabStruct))'
                 for derivative = string(fieldnames(tabStruct.(split)))'
+                    filename = sprintf('goal-vector_%s_%s%s.csv', split, derivative, Opt.tag);
                     writetable(tabStruct.(split).(derivative), ...
-                        fullfile(datafolder, sprintf('goal-vector_%s_%s%s.csv', split, derivative, Opt.tag)));
+                        fullfile(datafolder, filename));
                 end
             end
     end
