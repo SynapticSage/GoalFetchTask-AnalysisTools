@@ -4,12 +4,15 @@ function [filename_full, Props] = filename(animal, index, varargin)
 
 ip = inputParser;
 ip.KeepUnmatched = true;
-ip.addParameter('rootFolder', datadef('root','fast'));
-ip.addParameter('projectFolder', "goal");
+ip.addParameter('projectFolder', []);
 ip.parse(varargin{:})
 Opt = ip.Results;
 
-folder = fullfile(Opt.rootFolder, Opt.projectFolder);
+if isempty(Opt.projectfolder)
+    Opt.projectfolder = coding.file.projectfolder();
+end
+
+folder = fullfile(Opt.projectfolder);
 if ~exist(folder, 'dir')
     mkdir(folder);
 end
