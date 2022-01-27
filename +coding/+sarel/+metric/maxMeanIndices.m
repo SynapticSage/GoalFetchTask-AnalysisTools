@@ -1,4 +1,4 @@
-function out = computeMaxMeanIndices(tuningStruct, Binning)
+function out = maxMeanIndices(tuningStruct, Binning)
 % Computes distance and angle indices from
 %
 % These can be seen in the supplementary sections of
@@ -9,7 +9,10 @@ function out = computeMaxMeanIndices(tuningStruct, Binning)
 % Using to define the euclidean and path distance
 % indices
 
-fields = coding.sarel.table.field.standardBin();
+fields = coding.sarel.table.field.tuningCurves();
+if isfield(tuningStruct, 'occNorm')
+    tuningStruct = tuningStruct.occNorm;
+end
 
 % Each of the fields
 for field = fields(:)'

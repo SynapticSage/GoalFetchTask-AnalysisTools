@@ -1,4 +1,5 @@
 function Opt = gfmOptargs(varargin)
+% Main optional argumeent structure for my overaching analyses
 
 ip = inputParser;
 
@@ -12,7 +13,7 @@ ip.addParameter('taskFilter', "string($type)==""run""");    % query epochs
 ip.addParameter('cellFilter', 'ismember(string($area), ["CA1","PFC"]) & string($tag) ~= "artifcat" & $numspikes > 150'); % 
 
 % Shuffle and null distributions
-ip.addParameter('shuffleStruct', units.shuffle.optargs())   % struct of shuffling instructions (Reruns all analyses requested with sequences of shuffles specified here)
+ip.addParameter('shuffleStruct', [])   % struct of shuffling instructions (Reruns all analyses requested with sequences of shuffles specified here)
 ip.addParameter('nullMethod', []);
 % Shortcut varargin into shuffleStruct options
 ip.addParameter('nShuffle', []);     % number of shuffles to generate
@@ -30,11 +31,23 @@ ip.addParameter('checkpoint', 10); % checkpoints if > 1, where number for loops
 
 ip.parse(varargin{:})
 Opt = ip.Results;
-if isempty(Opt.nShuffle) && ~isempty(Opt.shuffleStruct)
+
+% Shuffle struct specific modifications
+if isempty(Opt.shuffleStruct)
+    Opt.shuffleStruct = units.shuffle.inputParser();
+    Opt.shuffleStruct.parse(varargin{:});
+    Opt.shuffleStruct = Opt.shuffleStruct.Results;
+end
+% Shortcuts
+if isempty(Opt.nShuffle) 
      Opt.nShuffle = Opt.shuffleStruct.nShuffle;
 end
-if isempty(Opt.skipShuffled) && ~isempty(Opt.shuffleStruct)
+if isempty(Opt.skipShuffled) 
     Opt.skipShuffled = Opt.shuffleStruct.skipShuffled;
 end
+
+% Convert Analyses to string, if not already
 Opt.analyses = string(Opt.analyses);
+
+
 

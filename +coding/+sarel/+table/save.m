@@ -16,7 +16,7 @@ if ~iscell(Opt.target)
     Opt.target = {Opt.target};
 end
 if ~isempty(Opt.tag)
-    Opt.tag = ['=e' Opt.tag];
+    Opt.tag = ['=' Opt.tag];
 end
 
 for target = Opt.target

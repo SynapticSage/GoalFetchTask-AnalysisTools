@@ -8,6 +8,10 @@ function outStruct = computeDirectionalityIndex(tuningStruct, angles, angledim, 
 %ip.parse(varargin{:})
 %Opt = ip.Results;
 
+if isfield(tuningStruct, 'occNorm')
+    tuningStruct = tuningStruct.occNorm;
+end
+
 disp("Rayleigh tuning scores");
 outStruct = struct();
 for field = string(fieldnames(tuningStruct))'

@@ -22,18 +22,34 @@ function [out, groups] = shuffleWithinConditions(beh, spikes, groupby, varargin)
 %                    `---'|---'`---'``---'`   '
 %                         |                    
 % --------------------------------------------------------------
-Opt = units.shuffle.optargs(varargin{:});
-Opt.kws_atBehavior.maxNeuron = numel(spikes.spikeTimes);
+ip = units.shuffle.optargs(varargin{:});
+ip.parse(varargin{:})
+Opt = ip.Results;
+% Post-process
+Opt.shuffleunits   = string(Opt.shuffleunits);
+Opt.shiftstatistic = char(Opt.shiftstatistic);
+Opt.cacheMethod = char(lower(Opt.cacheMethod));
+if isempty(Opt.endShuffle)
+    Opt.endShuffle = Opt.nShuffle;
+end
 Opt.shufflename = sprintf('shuffleWithinConditions=[%s]', ...
     join(groupby, "-"));
 Opt.shufflename = string(Opt.shufflename);
-    
 
+% Behavior and single cell
 if ~isempty(Opt.props)
     Opt.props = union("time", string(Opt.props));
     Opt.props = union(groupby, string(Opt.props));
     beh = beh(:, Opt.props);
 end
+% ATBEHAVIOR-SINGLECELL
+% UNMATCHED PARAMS --> go to units.atBehavior_singleCell.m
+Opt.kws_atBehavior = ip.Unmatched;
+Opt.kws_atBehavior.maxNeuron = numel(spikes.spikeTimes);
+if ~isfield(Opt.kws_atBehavior, 'behFilter')
+    warning("You're about to emark on an unfiltered shuffle!")
+end
+    
 
                                     
 %----------------------------------------
@@ -80,3 +96,4 @@ end
 if isfield(out, 'beh') && iscell(out.beh) && istable(out.beh{1})
     out.beh = util.table.icat(out.beh);
 end
+

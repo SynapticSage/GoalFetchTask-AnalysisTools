@@ -1,4 +1,4 @@
-function Opt = optargs(varargin)
+function ip = optargs()
 
 ip = inputParser;
 
@@ -9,8 +9,7 @@ ip.KeepUnmatched = true; % Any unmatched go to the called method units.atBehavio
 ip.addParameter('nShuffle', 50, @isnumeric);
 ip.addParameter('skipShuffled', false);         % requires a cacheToDisk scenario: if true, if it detects an existing shuffle at that index on the disk, it skips
 ip.addParameter('startShuffle', 1, @isnumeric); % the first shuffle index ip.addParameter('endShuffle', [], @isnumeric);  % the first shuffle index
-ip.addParameter('endShuffle', [], @isnumeric); % last shuffle
-% HOW do we shift?
+ip.addParameter('endShuffle', [], @isnumeric); % last shuffle HOW do we shift?
 ip.addParameter('shuffleunits', 'unitwise');  % shuffle neurons so that {unitwise}|uniform
 ip.addParameter('shiftstatistic', 'uniform'); % what statistic of shift? {uniform}|normal
 ip.addParameter('shifttype', 'circshift');
@@ -29,18 +28,4 @@ ip.addParameter('parquetfile', @(shuff) shuff + ".parquet"); % lambda defining p
 ip.addParameter('cacheToDisk', {});                          % used to define folder or cache file; if out to disk, this takes the parameters for coding.file.shufflefilename or coding.file.parquetfoldername
 ip.addParameter('groups', []);                               % pass in computed groups rather than labels from which we have to compute them? for saving computational time,
 ip.addParameter('outfolder', []);                            % pass this to set the outfolder, instead of deriving it from cache-specific methods called on cacheToDisk parameters
-
-ip.parse(varargin{:})
-Opt = ip.Results;
-
-% Post-process
-Opt.shuffleunits   = string(Opt.shuffleunits);
-Opt.shiftstatistic = char(Opt.shiftstatistic);
-Opt.cacheMethod = char(lower(Opt.cacheMethod));
-if isempty(Opt.endShuffle)
-    Opt.endShuffle = Opt.nShuffle;
-end
-
-% UNMATCHED PARAMS --> go to units.atBehavior_singleCell.m
-Opt.kws_atBehavior = ip.Unmatched;
 

@@ -6,7 +6,7 @@ function [spikes, Opt] = analyses(animal, day, varargin)
 %
 % Until this file works cradle to grave, I'm running it as if it were a script.
 
-Opt = gfmOptargs(varargin{:});
+Opt = OPTARGS(varargin{:});
 
 % -------------
 % Get Unit data
@@ -40,6 +40,7 @@ if ~isempty(Opt.shuffleStruct)
     Opt.shuffleStruct = util.struct.update(Opt.shuffleStruct, tmp); clear tmp;
     groupby = ["epoch", "period"]; % properties in behavior table to shuffle around
     beh = gbehavior.lookup(animal, [], day);
+    % Any unmatched args are passed to atBehavior_singleCell
     units.shuffle.shuffleWithinConditions(beh, spikes, groupby, Opt.shuffleStruct);
 end
 

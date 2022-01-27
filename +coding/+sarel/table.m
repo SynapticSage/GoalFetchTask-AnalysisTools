@@ -41,6 +41,7 @@ function Out = table(sarel, varargin)
 %  This method shares much of its logic with sarel.shuffle.compare
 
 ip = coding.sarel.helper.mainStructInputParser();
+ip.addParameter('appendCellTable', []);
 ip.parse(varargin{:});
 Opt = ip.Results;
 
@@ -86,5 +87,18 @@ for split = setdiff(splits, "shuffle")
             sarel.Binning, S.Dimensions, tuning_curve);
 
         Out.(split).(tuning_curve) = coding.sarel.table.append(Out.(split).(tuning_curve), Metrics, descriptors);
+
+        if ~isempty(Opt.appendCellTable)
+            if ismember('d_neuron', fieldnames(Out.(split).(tuning_curve)))
+                neurons = Out.(split).(tuning_curve).d_neuron;
+            else
+                neurons = Out.(split).(tuning_curve).d_neurons;
+            end
+            if numel(neurons) > 1
+                append = ...
+                    Opt.appendCellTable(neurons, :);
+                Out.(split).(tuning_curve) = [Out.(split).(tuning_curve), append];
+            end
+        end
     end
 end

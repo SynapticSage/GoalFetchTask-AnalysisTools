@@ -1,4 +1,7 @@
 function tuningStruct = occupancyNormalize(tuningStruct, occupancyStruct)
+
+samplingPeriodOfOccupancy = 1/30;
+
 disp("Occcupancy normalizing results");
 for field = string(fieldnames(tuningStruct))'
 
@@ -17,7 +20,8 @@ for field = string(fieldnames(tuningStruct))'
     shift = Nt - Nc;
     tuningStruct.occNorm.(field) = bsxfun(@rdivide, ...
         tuningStruct.(field), ...
-        shiftdim(occupancyStruct.(field), -shift));
+        samplingPeriodOfOccupancy * shiftdim(occupancyStruct.(field), -shift));
 
+    
 end
 
