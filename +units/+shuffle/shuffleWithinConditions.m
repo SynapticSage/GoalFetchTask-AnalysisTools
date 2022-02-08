@@ -22,7 +22,7 @@ function [out, groups] = shuffleWithinConditions(beh, spikes, groupby, varargin)
 %                    `---'|---'`---'``---'`   '
 %                         |                    
 % --------------------------------------------------------------
-ip = units.shuffle.optargs(varargin{:});
+ip = units.shuffle.inputParser;
 ip.parse(varargin{:})
 Opt = ip.Results;
 % Post-process
@@ -46,9 +46,10 @@ end
 % UNMATCHED PARAMS --> go to units.atBehavior_singleCell.m
 Opt.kws_atBehavior = ip.Unmatched;
 Opt.kws_atBehavior.maxNeuron = numel(spikes.spikeTimes);
-if ~isfield(Opt.kws_atBehavior, 'behFilter')
-    warning("You're about to emark on an unfiltered shuffle!")
+if ~isfield(Opt.query, 'query')
+    warning("You're about to emark on an un time filtered shuffle!")
 end
+Opt.groupby = groupby; % add the groupby list to options (so that downstream functiosn can see this, e.g. save functiosn for annotating saved data with waht we grouped by)
     
 
                                     
@@ -60,6 +61,11 @@ end
 %----------------------------------------
 % Create set of shuffle times
 %----------------------------------------
+% Apply any filtration
+if ~isempty(Opt.query)
+    disp("Filtering with " + Opt.query);
+    beh = util.table.query(beh, Opt.query);
+end
 % S x G x 1 if uniform or S x G x N if unit-based
 if isempty(Opt.groups)
     disp("Finding groups")
@@ -79,7 +85,6 @@ shifts = units.shuffle.helper.calculateshifts(spikes, groups, measure, Opt);
 
 % Prepare the output structure and document our settings
 [out, Opt] = units.shuffle.helper.prepareOuts(spikes, groupby, shifts, groups,  Opt);
-
 % -------
 % Shuffle
 % -------

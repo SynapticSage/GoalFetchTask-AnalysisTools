@@ -1,18 +1,21 @@
 function [filename_full, Props] = filename(animal, index, varargin)
 % function filename_full = filename(animal, index)
-% 
 
 ip = inputParser;
 ip.KeepUnmatched = true;
-ip.addParameter('projectFolder', []);
+ip.addParameter('datafolder', {'exp_raw'});
 ip.parse(varargin{:})
 Opt = ip.Results;
 
-if isempty(Opt.projectfolder)
-    Opt.projectfolder = coding.file.projectfolder();
+if iscell(Opt.datafolder)
+    Opt.datafolder = coding.file.datafolder(Opt.datafolder{:});
+elseif ~isempty(Opt.datafolder)
+    Opt.datafolder = Opt.datafolder;
+else
+    Opt.datafolder = coding.file.datafolder();
 end
 
-folder = fullfile(Opt.projectfolder);
+folder = fullfile(Opt.datafolder);
 if ~exist(folder, 'dir')
     mkdir(folder);
 end

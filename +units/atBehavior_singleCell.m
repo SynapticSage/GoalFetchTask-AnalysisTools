@@ -114,7 +114,10 @@ if spikeTimesExist
             %spikeTimes(violations) = nan;
             spikesBeh(violations, :) = [];
             case 'nan'
-            spikesBeh(violations, :) = nan;
+                for field = string(spikesBeh.Properties.VariableNames)
+                    spikesBeh.(field)(violations) = nan;
+                end
+            
             otherwise
                 %pass
         end

@@ -18,7 +18,7 @@ ip.addParameter('taskFilter', '');            % which epochs?
 ip.addParameter('cellFilter', '');            % which cells?
 ip.addParameter('spikes', []);             % pass the spike data to use here, so do not have to reload in RAM
 % ----- Data shape ---------
-ip.addParameter('dense', true);               % Whether to get the dense matrix or just keep only the sparse spike times
+ip.addParameter('dense', false);               % Whether to get the dense matrix or just keep only the sparse spike times
 % ----- Cleaning option -------
 ip.addParameter('constrainTimePeriodToSpiking', false);
 ip.addParameter('removeInactiveCells', false);
@@ -42,10 +42,10 @@ infoDatatype = infoDatatype + "Table";
 cellinfo = ndb.load(animal, infoDatatype);
 indices = [cellinfo.day, cellinfo.epoch, cellinfo.tetrode, cellinfo.cell]; % day epoch tet cell
 
-goodEpochs         = true(size(indices,1));
-goodEpochs_source2 = true(size(indices,1));
+task = ndb.load(animal, 'task');
+goodEpochs         = true(size(indices,1),1);
+goodEpochs_source2 = true(size(indices,1),1);
 if Opt.taskFilter
-    task = ndb.load(animal, 'task');
     taskIndices = evaluatefilter(task, Opt.taskFilter);
     goodEpochs = ismember(indices(:,1:2), taskIndices, 'rows');
 end
@@ -84,11 +84,15 @@ areaPerNeuron = [];
 cell_table = table();
 timesSpiking = {};
 inds_spikes = nd.indicesMatrixForm(spikes);
+indices = intersect(inds_spikes, indices, 'rows'); % intersect task constrained cellinfo indices with actual indices of the spikes structure
 for ind = progress(indices')
     ind = num2cell(ind);
     [day, epoch, tetrode, neuron] = deal(ind{:});
     neuronTetEpoch_details = coding.table.summarize(cellinfo, [ind{:}]);
     neuronTetEpoch         = nd.get(spikes, [ind{:}]);
+    if any(ismember(fieldnames(neuronTetEpoch_details), 'area'))
+        disp("found area")
+    end
     
     if ~isempty(neuronTetEpoch) && ~isfield(neuronTetEpoch, 'area')
         %warning("Area for %d %d %d %d not present", day, epoch, tetrode, neuron);
@@ -97,7 +101,12 @@ for ind = progress(indices')
             && any(ismember(fieldnames(neuronTetEpoch_details), 'area'))...
             && ~isempty(neuronTetEpoch) ...
             && isfield(neuronTetEpoch,'data')...
-            && ~isempty(neuronTetEpoch.data)
+            
+        ind = cat(2,ind{:});
+        if any(size(neuronTetEpoch.data)==0)
+            warning("Empty location at " + join(string(ind), "-"));
+            continue
+        end
 
         % Continually update unique index list
         neurontet = [tetrode, neuron];
@@ -105,7 +114,6 @@ for ind = progress(indices')
         cell_index          = unique(cell_index, "rows", "stable");
 
         % Add data according to where the cell is on this list
-        ind = cat(2,ind{:});
         cell_match = ismember(cell_index, neurontet, 'rows');
         assert(sum(cell_match) == 1)
         i = find(cell_match);

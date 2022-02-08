@@ -34,14 +34,16 @@ if strcmp(Opt.cacheMethod, 'parquet') && refreshCache
     end
 elseif strcmpi(Opt.cacheMethod, 'matfile') && refreshCache
     disp('Deleting and refreshing matfile cache')
-    delete(coding.file.shufflematfilename(Opt.cacheToDisk{:}));
+    delete(coding.file.shufflematfilename(Opt.cacheToDisk{:}, Opt));
 end
 
 % Setup struct
 % ---------------
 switch Opt.cacheMethod
 case 'matfile'
-    out = coding.file.shufflematfile(Opt.cacheToDisk{:}, 'writable', true);
+    Opt.writable = true;
+    out = coding.file.shufflematfile(Opt.cacheToDisk{:}, Opt);
+    disp("Shuffle file path => " + out.Properties.Source);
 case 'parquet'
     out = struct();
 otherwise
@@ -57,5 +59,11 @@ out.shifttype = Opt.shifttype;
 out.shiftWhat = Opt.shiftWhat;
 out.shiftstatistic = Opt.shiftstatistic;
 out.shufflename = Opt.shufflename;
+if ~isempty(Opt.query)
+    Opt.query = Opt.query;
+else
+    Opt.query = '';
+end
+if isfield(Opt, 'writable'); Opt = rmfield(Opt, 'writable'); end
 out.Opt = Opt;
 toc
