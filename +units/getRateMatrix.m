@@ -90,9 +90,9 @@ for ind = progress(indices')
     [day, epoch, tetrode, neuron] = deal(ind{:});
     neuronTetEpoch_details = coding.table.summarize(cellinfo, [ind{:}]);
     neuronTetEpoch         = nd.get(spikes, [ind{:}]);
-    if any(ismember(fieldnames(neuronTetEpoch_details), 'area'))
-        disp("found area")
-    end
+    %if any(ismember(fieldnames(neuronTetEpoch_details), 'area'))
+    %    disp("found area")
+    %end
     
     if ~isempty(neuronTetEpoch) && ~isfield(neuronTetEpoch, 'area')
         %warning("Area for %d %d %d %d not present", day, epoch, tetrode, neuron);

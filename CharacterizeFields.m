@@ -4,6 +4,7 @@ Opt = OPTARGS;
 Opt.unit = 'spikes';
 Opt.taskFilter = [];
 Opt.cellFilter = [];
+Opt.behFilter = [];
 
 [animal, day] = deal('RY16', 36);
 
@@ -28,10 +29,23 @@ beh = gbehavior.lookup(animal, [], day);
     'merge',  false,...
     'returnIndices', true, ...
     'query', Opt.behFilter);
+spikes.beh = util.table.split(spikes.beh, "neuron");
 
-% =========
-% How do ceclls fire in reseponse to these?
-% =========
+% ===============================
+% How do cells look (raster-wise) :
+% Send tidy data to Julia
+% ===============================
+folder = coding.file.datafolder('exp_raw', 'visualize_raw_neural');
+behavioral_properties = ["x","y","currentPathLength","currentAngle"];
+labeledSpiking = units.labeledSpiking(spikes, ["epoch", "block", "subblock", "blocktraj", "traj"], beh);
+spiking_fn = coding.file.datafolder('exp_raw', 'visualize_raw_neural', animal + "_" + day + "_" + 'labeled_spiking.csv');
+beh_fn = coding.file.datafolder('exp_raw', 'visualize_raw_neural', animal + "_" + day + "_" + 'beh.csv');
+writetable(labeledSpiking, spiking_fn);
+writetable(beh, beh_fn);
+
+% =========================================
+% How do cells fire in reseponse to these?
+% =========================================
 
 % -----
 % Combos

@@ -22,25 +22,24 @@ info = ndb.load(animal, datatype);
 % -----
 disp("Labeling dimensions");
 dimLabels = ["day","epoch","tetrode","cell"];
-inds = ndb.indicesMatrixForm(info);
-if ~isempty(inds)
-
+if ~isempty(Opt.inds)
     infoTable = ndb.load(animal, string(datatype) + "Table");
 
-    pullTheseLabels = dimLabel(1:numel(inds));
+    pullTheseLabels = dimLabels(1:numel(Opt.inds));
     addTheseLater{:,1} = pullTheseLabels;
-    addTheseLater{:,2} = inds;
-    info = ndb.get(info, inds);
+    addTheseLater{:,2} = Opt.inds;
+    info = ndb.get(info, Opt.inds);
 
-    infoQuery = "$" + pullTheseLabels + " = " + string(inds);
-    removeTheseRows = util.table.query(infoTable, infoQuery);
-    infoTable(removeTheseRows, :) = [];
+    infoQuery = "$" + pullTheseLabels + " == " + string(Opt.inds);
+    removeTheseRows = util.table.query_logical(infoTable, infoQuery);
+    infoTable(find(removeTheseRows), :) = [];
 
-    remainingDimLabels = dimLabels(numel(inds)+1:end);
+    topDim = size(ndb.indicesMatrixForm(info), 2);
+    remainingDimLabels = dimLabels(numel(Opt.inds)+1:numel(Opt.inds)+topDim);
     remainingDims = 1:numel(remainingDimLabels);
     [dims, dimLabels] = deal(remainingDims, remainingDimLabels);
 else
-    topDim = size(inds, 2);
+    topDim = size(ndb.indicesMatrixForm(info), 2);
     dims = 1:topDim;
     dimLabels = dimLabels(1:topDim);
     infoTable = [];
@@ -71,7 +70,7 @@ end
 % ---------------
 disp("Converting to tidy data");
 tab = tidyData.fromNdb(info);
-assert(all(ismember(["area"], string(fieldnames(tab)))))
+assert(all(ismember(["area"], string(fieldnames(tab)))), "Area should be a field")
 
 % ---------------
 % Append to existing or is this it?
@@ -82,9 +81,10 @@ else
     for row = addTheseLater'
         tab.(row{1}) = repmat(row{2}, height(tab), 1);
     end
-    labels    = setdiff(["day", "epoch", "tetrode", "cell"],...
+    labels    = intersect(["day", "epoch", "tetrode", "cell"],...
                          string(infoTable.Properties.VariableNames));
-    infoTable = sortrows([infoTable; tab], labels);
+    infoTable = util.cell.icat({infoTable, tab}, 'fieldCombine', 'union');
+    infoTable = sortrows(infoTable, labels);
 end
 
 % Save

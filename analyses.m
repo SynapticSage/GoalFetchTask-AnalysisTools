@@ -6,7 +6,13 @@ function [spikes, Opt] = analyses(animal, day, varargin)
 %
 % Until this file works cradle to grave, I'm running it as if it were a script.
 
+addpath("~/Code/analysis")
 Opt = OPTARGS(varargin{:});
+
+% TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
+%%  HARD CODE  : remove this
+% TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
+Opt.unit = 'spikes';
 
 % -------------
 % Get Unit data
@@ -34,6 +40,7 @@ if ~isempty(Opt.shuffleStruct)
     tmp = struct('groups', [],...
         'cacheToDisk', {{animal, day}},...
         'shift', Opt.shift,...
+        'query', Opt.behFilter,...
         'returnIndices', 1);
     Opt.shuffleStruct = util.struct.update(Opt.shuffleStruct, tmp); clear tmp;
     groupby = ["epoch", "period"]; % properties in behavior table to shuffle around

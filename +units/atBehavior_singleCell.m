@@ -114,10 +114,13 @@ if spikeTimesExist
             %spikeTimes(violations) = nan;
             spikesBeh(violations, :) = [];
             case 'nan'
-                for field = string(spikesBeh.Properties.VariableNames)
-                    spikesBeh.(field)(violations) = nan;
+                if istable(spikesBeh)
+                    for field = string(spikesBeh.Properties.VariableNames)
+                        spikesBeh.(field)(violations) = nan;
+                    end
+                else
+                    spikesBeh(violations) = nan;
                 end
-            
             otherwise
                 %pass
         end
@@ -163,7 +166,7 @@ elseif strcmp(Opt.output, 'table')
                 spikesBeh{i} = table(spikesBeh{i}, 'VariableNames', "indices");
             end
         elseif ~iscell(spikesBeh) && ~istable(spikesBeh)
-            spikesBeh = table(spikesBeh, 'VariableNames', 'indices');
+            spikesBeh = table(spikesBeh, 'VariableNames', "indices");
         else
             error("What the?")
         end
@@ -209,4 +212,5 @@ end
 
 if isa(spikesBeh.neuron, 'uint8') || isa(spikesBeh.neuron, 'int8')
     warning('int8 neuron can lead to strangh consequences');
+    keyboard
 end

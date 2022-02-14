@@ -10,10 +10,15 @@ ip = inputParser;
 ip.addParameter('valueOnly',false);    % Whether to not return ccolumns that function as indices (time, traj, day, epoch)
 ip.addParameter('scaleVars',false);    % Whether to scale vars
 
+% Matrix var limits
+% Tables only support (easily) vectors, especially if there's a plan to funnel into csv
+ip.addParameter('columnLimit', 5);
+
 % Data constraints
 ip.addParameter('throwOutSleep',true); % Whether to scale vars
 ip.addParameter('throwOutThresh',2);   % If 2 seconds from nearest point, toss it
-ip.addParameter('dropFields',["goalVec", "egoVec", "angle","headEgoAngle", "euclidianDistance"]);   % If 2 seconds from nearest point, toss it
+ip.addParameter('dropFields',["angle", "headEgoAngle", "euclidianDistance"]);   % If 2 seconds from nearest point, toss it
+
 
 % USE PRELOADED inputs?
 ip.addParameter('behavior', []);       % Preloaded behavior file
@@ -54,28 +59,54 @@ end
 if ~isempty(Opt.behavior)
     behavior = Opt.behavior;
 else
-    behavior = ndb.load(animal, 'egocentric', 'inds', inds);
+    behavior = ndb.load(animal, 'behavior', 'inds', inds);
 end
 
 behavior_inds = ndb.indicesMatrixForm(behavior);
 behavior      = ndb.toNd(behavior);
 
-B = {};
+cnt=0;
+B = cell(size(inds,1),1);
 for binds = inds'
-    X = rmfield(nd.get(behavior, binds), ["gridTable", "pathX", "pathY", "trialTimes", Opt.dropFields]);
-    B{end+1} = struct2table(X);
-    B{end}.day = repmat(binds(1), height(B{end}), 1);
-    B{end}.epoch = repmat(binds(2), height(B{end}), 1);
+    cnt=cnt+1;
+    X = nd.get(behavior, binds);
+    rmfields = intersect(["gridTable", "pathX", "pathY", "trialTimes", Opt.dropFields],...
+        fieldnames(behavior));
+    X = rmfield(X, rmfields);
+
+    for field = string(fieldnames(X))'
+        if isrow(X.(field))
+            continue
+        elseif iscolumn(X.(field))
+            X.(field) = X.(field)(:);
+        elseif ~isempty(Opt.columnLimit)
+            X = util.struct.explode(X, field, ...
+                'columnLimit', Opt.columnLimit);
+        end
+    end
+
+    % Convert piece into a table
+    B{cnt}       = struct2table(X);
+
+    % Annotate
+    B{cnt}.day   = repmat(binds(1), height(B{cnt}), 1);
+    B{cnt}.epoch = repmat(binds(2), height(B{cnt}), 1);
 end
 
 B = B(~cellfun(@isempty, B));
-behavior         = cat(1, B{:});
+try
+    behavior         = cat(1, B{:});
+catch ME
+    warning('Not all columns shared')
+    behavior         = util.cell.icat(B);
+end
 behavior.time    = behavior.postime;
 behavior.postime = [];
 
 % Separate x and y
-behavior.x = behavior.pos(:,1);
-behavior.y = behavior.pos(:,2);
+behavior.x = behavior.pos_1;
+behavior.y = behavior.pos_2;
+behavior(:, ["pos_1", "pos_2"]) = [];
 
 
 %% ===================
@@ -127,6 +158,8 @@ traj(isnan(traj)) = 0;
 dTraj = diff(traj);
 changes = [0; dTraj] ~= 0;
 behavior.period = cumsum(changes);
+
+% Distance to other goals
 
 % NOTE eventually, we might want to expand trial times to time length to have start stop
 
