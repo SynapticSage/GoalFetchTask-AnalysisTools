@@ -36,3 +36,5 @@ Statescript/Data/Code_*.m
 /Statescript/Data/*
 tmp*
 *.vim
+dask-worker_space
+dask-worker-space/
