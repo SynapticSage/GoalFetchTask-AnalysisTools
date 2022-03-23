@@ -2,7 +2,7 @@ function m = shufflematfile(animal, index, varargin)
 
 filename_full = coding.file.shufflematfilename(animal, index, varargin{:});
 if ~(numel(varargin) == 1 && isstruct(varargin{1}))
-    S = util.struct.varargin2struct(varargin);
+    S = util.struct.varargin2struct(varargin{:});
 else
     S = varargin{1};
 end

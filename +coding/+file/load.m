@@ -11,6 +11,7 @@ ip.addParameter('variables', {}); % which variables to load; if empty, all
 ip.addParameter('squeeze', []);
 ip.addParameter('shuffle', 'cache'); % whether to cache or load the shuffle file
 ip.addParameter('filename_full', []);
+ip.addParameter('shuffleStruct', []);
 ip.parse(varargin{:})
 Opt = ip.Results;
 
@@ -69,10 +70,10 @@ end
 if ~isempty(Opt.shuffle)
     switch char(Opt.shuffle)
         case 'cache'
-            spikes.shuffle = coding.file.shufflematfile(animal, index);
+            spikes.shuffle = coding.file.shufflematfile(animal, index, 'shuffleStruct', Opt.shuffleStruct);
         case 'load'
             spikes.shuffle = coding.file.load(...
-                coding.file.shufflefilename(animal, index));
+                coding.file.shufflefilename(animal, index, 'shuffleStruct', Opt.shuffleStruct));
         otherwise
             error("Unrecognized option")
     end

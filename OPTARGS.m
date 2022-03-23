@@ -46,6 +46,9 @@ if isempty(Opt.skipShuffled)
     Opt.skipShuffled = Opt.shuffleStruct.skipShuffled;
 end
 
+% Taylor shuffle struture to the options above
+Opt.shuffleStruct.query = Opt.behFilter;
+
 % Convert Analyses to string, if not already
 Opt.analyses = string(Opt.analyses);
 

@@ -159,6 +159,9 @@ Spikes.areas      = areaPerNeuron; % area of each cell (also in the property tab
 Spikes.cellIndex = cell_index; % index of each cell in filter framework
 Spikes.cellTable = cell_table; % table with properties of each cell
 Spikes.timePeriods = startendtimes; % the time periods our data lives in (e.g., epochs)
+Spikes.cellTable.unit = (1:height(Spikes.cellTable))';
+Spikes.cellTable.unitoftet = Spikes.cellTable.cell;
+Spikes.cellTable.cell = [];
 
 if Opt.dense
     spikesData.type    = "rate";

@@ -82,7 +82,11 @@ for ind = progress(indices')
 
         i = find(tetrode == uTetrodes);
 
+        if ~isfield(neuronTetEpoch_details, "area")
+            continue
+        end
         areaPerTetrode(i) = string(neuronTetEpoch_details.area)
+        tetrodePerUnit(i) = tetrode;
         if numel(timesSpiking) < i || numel(timesSpiking{i}) == 0
             timesSpiking{i} = [(neuronTetEpoch.(Opt.timefield)(:,1))'];
             markValues{i}   = [(neuronTetEpoch.(Opt.markfield)(:,Opt.markcols))'];
@@ -236,31 +240,9 @@ end
 
 % Fitler spurious : BUG
 % ---------------
-%if Opt.filterSpurious % if it violates 1khz, then rate limit?
-%    if ~isempty(Opt.samplingRate)
-%        samplingPeriod = 1/Opt.samplingRate;
-%    else
-%        samplingPeriod = Opt.timebinSize;
-%    end
-%    countLimit = (Opt.filterSpurious * (samplingPeriod/1e-3));
-%    spikeCountMatrix(spikeCountMatrix > countLimit) = 0;
-%end
-
-% Remove cells lacking activityt?
-%--------------------------------
-%if Opt.removeInactiveCells
-%    activeCells = ~all(spikeCountMatrix==0,2);
-%    if ~any(activeCells); error("Fuck"); end
-%    spikeRateMatrix = spikeRateMatrix(activeCells,:);
-%    spikeCountMatrix = spikeCountMatrix(activeCells,:);
-%    cell_index = cell_index(activeCells,:);
-%    areaPerTetrode = areaPerTetrode(activeCells);
-%end
-
-%if ~isempty(Opt.gaussianFilter)
-%    spikeRateMatrix = arrayfun(@(neuron) conv(spikeRateMatrix(neuron,:), gausskernel(Opt.gaussianFilter{:}),'same'), 1:size(spikeRateMatrix,1),'UniformOutput',false);
-%    spikeRateMatrix = cat(1,spikeRateMatrix{:});
-%end
+badtetrodes = find(all(markTensor==0, 2:3));
+markTensor(badtetrodes,:,:) = [];
+tetrodePerUnit(tetrodePerUnit==0) =[];
 
 % Struct out
 % ----------
@@ -269,4 +251,4 @@ markData.marks      = markTensor;
 markData.time       = timeBinMidPoints(:);
 markData.binEdges   = timeBinStartEnd(:);
 markData.areas      = areaPerTetrode;
-markData.cell_index = cell_index;
+markData.tetrodePerUnit = tetrodePerUnit;

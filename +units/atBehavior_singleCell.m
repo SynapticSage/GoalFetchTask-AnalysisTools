@@ -210,7 +210,10 @@ else
     error("unrecognized return type");
 end
 
-if isa(spikesBeh.neuron, 'uint8') || isa(spikesBeh.neuron, 'int8')
-    warning('int8 neuron can lead to strangh consequences');
-    keyboard
+if isa(spikesBeh.neuron, 'int8')
+    spikeBeh.neuron = uint8(spikesBeh.neuron);
+end
+if isa(spikesBeh.neuron, 'uint8') 
+    warning('uint8 neuron can lead to strange consequences if you have more than 255 cells');
+    %spikeBeh.neuron = cast(spikeBeh.neuron, 'uint16');
 end

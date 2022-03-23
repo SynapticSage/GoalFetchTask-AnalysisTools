@@ -30,5 +30,6 @@ ip.addParameter('cacheMethod', 'matfile');                   % {matfile} | parqu
 ip.addParameter('parquetfile', @(shuff) shuff + ".parquet"); % lambda defining parquet file name
 ip.addParameter('cacheToDisk', {});                          % used to define folder or cache file; if out to disk, this takes the parameters for coding.file.shufflefilename or coding.file.parquetfoldername
 ip.addParameter('groups', []);                               % pass in computed groups rather than labels from which we have to compute them? for saving computational time,
+ip.addParameter('groupby', ["epoch", "period"]);                               % pass in computed groups rather than labels from which we have to compute them? for saving computational time,
 ip.addParameter('outfolder', []);                            % pass this to set the outfolder, instead of deriving it from cache-specific methods called on cacheToDisk parameters
 

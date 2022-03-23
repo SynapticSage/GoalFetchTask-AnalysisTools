@@ -1,6 +1,5 @@
 function D = dimension(raw, Binning, dimensions, tuning_curve)
 %
-
 if nargin < 4
     tuning_curve = "";
 end
@@ -11,6 +10,10 @@ if isstruct(raw)
         if sizes.(field) > max_; fieldmax = field; end
     end
     raw = raw.(fieldmax);
+end
+
+if ndims(raw) == numel(dimensions) + 1
+    dimensions = [dimensions, "shuffle"];
 end
 
 D = struct();

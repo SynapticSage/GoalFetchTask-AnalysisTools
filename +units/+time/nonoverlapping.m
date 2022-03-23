@@ -7,7 +7,7 @@ ip.parse(varargin{:})
 Opt = ip.Results;
 
 if isa(epochPeriods,'single')
-    samplingPeriod = single(samplingPeriod);
+    Opt.samplingPeriod = single(Opt.samplingPeriod);
 end
 
 t_startends = [];
@@ -21,7 +21,7 @@ elseif ~isempty(Opt.samplingPeriod)
     for epoch = 1:size(epochPeriods, 1)
         start = epochPeriods(epoch, 1);
         stop =  epochPeriods(epoch, 2);
-        t_startends = [t_startends, start:samplingPeriod:stop];
+        t_startends = [t_startends, start:Opt.samplingPeriod:stop];
     end
 else
     error('Must provide nSamples or samplingPeriod');

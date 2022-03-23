@@ -41,7 +41,7 @@ nCells = numel(spikes.spikeTimes);
 
 % if no passed in method, which to use?
 if isempty(Opt.method)
-    if ~isempty(Opt.samplingRate)
+    if isempty(Opt.samplingPeriod)
         Opt.method = 'overlappingWindows';
     else
         Opt.method = 'nonOverlappingWindows';
@@ -72,8 +72,8 @@ switch Opt.method
         % 
 
         disp('(Time bin mode)')
-        [t_midpoints, t_startends] = util.time.overlapping([Opt.startTime, Opt.endTime], ...
-            Opt.samplingPeriod, Opt.window)
+        [t_midpoints, t_startends] = units.time.overlapping([Opt.startTime, Opt.endTime], ...
+            Opt.samplingPeriod, 'window', Opt.window)
         windowStarts = t_startends(1,:);
         windowStops = t_startends(2,:);
 
@@ -107,12 +107,12 @@ switch Opt.method
         % Requirements
         % ------------
         % 
-        disp('(window/samprate method)')
+        disp('(samprate method)')
 
         % Setup time matrices
         % -------------------
         [t_midpoints, t_startends]  = units.time.nonoverlapping(...
-            [Opt.startTime, Opt.endTime], Opt.samplingPeriod);
+            [Opt.startTime, Opt.endTime], 'samplingPeriod', Opt.samplingPeriod);
 
         % Densify spikes
         % --------------
@@ -203,6 +203,7 @@ spikes.time       = t_midpoints(:);
 spikes.binEdges   = t_startends(:);
 spikes.samplingRate = Opt.samplingPeriod;
 spikes.dt = Opt.samplingPeriod;
+spikes.spikeCountMatrix = uint8(spikeCountMatrix);
 
 if strcmpi(Opt.returnOutput, 'matrix')
     spikes = spikes.data;

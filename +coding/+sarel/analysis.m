@@ -45,10 +45,10 @@ util.notify.pushover('Sarel','Finished main data');
 % Any of the indices that do not work, for now, are computed outside of this function
 
 % Computes goal indices in conjuction with shuffles
-spikes.sarel.ground.goalplaceindex = ...
-    coding.sarel.metric.goalPlaceIndex(spikes, beh, 'ground');
-spikes.sarel.stops.goalplaceindex = ...
-    coding.sarel.metric.goalPlaceIndex(spikes, beh, 'stops');
+%spikes.sarel.ground.goalplaceindex = ...
+%    coding.sarel.metric.goalPlaceIndex(spikes, beh, 'ground');
+%spikes.sarel.stops.goalplaceindex = ...
+%    coding.sarel.metric.goalPlaceIndex(spikes, beh, 'stops');
 
 % ---------
 % SHUFFLES
@@ -64,7 +64,7 @@ if ~isfield(spikes.sarel, 'shuffle')
 end
 
 % Process each shuffle!
-Shuf = {animal, day};
+Shuf = {animal, day, 'shuffleStruct', Opt.shuffleStruct}; % Gets passsesd to shufflematfilename
 for iS = progress(1:Opt.nShuffle, 'Title', 'Shuffles')
     % get
     [item, Shuf] = units.shuffle.get(Shuf, iS, 'debug', false, 'shiftless', true);
@@ -74,12 +74,13 @@ for iS = progress(1:Opt.nShuffle, 'Title', 'Shuffles')
         'append', true,...
         'checkpointActive', {Opt.checkpoint, iS});
 end
+if iscell(spikes.sarel.shuffle); spikes.sarel.shuffle = cat(1,spikes.sarel.shuffle{:}); end
 util.notify.pushover('Sarel','Finished analyzing shuffles');
 
 % ---------------------------------------------
 % Main measurements: Make analyzable structures
 % ---------------------------------------------
-tab = spikes.sarel.table(spikes.sarel);
+tab = coding.sarel.table(spikes.sarel);
 coding.sarel.table.save(tab, 'target', 'csv');
 
 % ---------------------------------------------
@@ -89,3 +90,5 @@ Out = coding.sarel.shuffle.compare(spikes.sarel, 'onlyShuffle', false);
 tab = coding.sarel.table(Out);
 coding.sarel.table.save(tab, 'target', 'csv', 'tag', 'shuffle');
 
+coding.file.save(animal, day, spikes,...
+    'append', true, 'checkpointActive', Opt.checkpoint);

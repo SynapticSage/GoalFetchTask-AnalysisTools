@@ -4,6 +4,7 @@ function out = tuning(spikes, fields, Binning, varargin)
 
 ip = inputParser;
 ip.KeepUnmatched = true;
+ip.addParameter('dimension', []);
 ip.addParameter('anglebins', 18);
 ip.addParameter('distbins',  20);
 ip.addParameter('anglefield', 'currentAngle');
