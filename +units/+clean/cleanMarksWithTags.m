@@ -1,3 +1,0 @@
-function cleanMarksWithTags(marks, units)
-
-
