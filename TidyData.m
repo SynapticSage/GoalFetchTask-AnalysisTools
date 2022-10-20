@@ -69,18 +69,18 @@ cell_fn    = coding.file.datafolder('exp_raw', 'visualize_raw_neural',...
 writetable(spikes.cellTable, cell_fn);
 
 % Ripples (CA1 and cortical)
-rippletime = ndb.load(animal, 'rippletime', 'inds', day);
+rippletime    = ndb.load(animal, 'rippletime',    'inds', day);
 rippletimepfc = ndb.load(animal, 'rippletimepfc', 'inds', day);
 rip_fn     = coding.file.datafolder('exp_raw', 'visualize_raw_neural',...
                                         animal + "_" + day + "_" + 'ripple.csv');
-rippletime    = ndb.toTidy(rippletime, 'labels', ["day","epoch"]);
+rippletime    = ndb.toTidy(rippletime,    'labels', ["day","epoch"]);
 rippletimepfc = ndb.toTidy(rippletimepfc, 'labels', ["day","epoch"]);
 rippletime.area    = repmat("CA1", height(rippletime), 1);
 rippletimepfc.area = repmat("PFC", height(rippletimepfc), 1);
 writetable([rippletime; rippletimepfc], rip_fn);
 
 % Rhythms (Just theta for now)
-rhythm        = lfpLib.create.rhythmTable(animal, 'thetaref', day);
+rhythm        = lfpLib.create.rhythmTable(animal, {'thetaref', 'eegref'}, day, 'label', {'', 'broad'});
 rhythm_fn     = coding.file.datafolder('exp_raw', 'visualize_raw_neural', ...
                                          animal + "_" + day + "_" + 'rhythm.nc');
 util.table.netcdfwrite(rhythm, rhythm_fn);

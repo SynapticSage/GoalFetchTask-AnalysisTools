@@ -91,6 +91,6 @@ end
 % ----
 datadir = animaldef(animal);
 tableName = datatype + "Table";
-assign(tableName, infoTable);
+eval(sprintf('%s=infoTable', tableName));
 disp("Saving");
 save(fullfile(datadir{2}, string(animal) + tableName), tableName);

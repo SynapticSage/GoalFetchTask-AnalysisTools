@@ -2,7 +2,7 @@ function out = summarize(T, index)
 % function out = summaraze(T, index)
 % Summarizes info table entries for an index
 
-index_label_order = ["$day", "$epoch", "$tetrode", "$cell"];
+index_label_order           = ["$day", "$epoch", "$tetrode", "$cell"];
 index_label_order_wo_dollar = ["day", "epoch", "tetrode", "cell"];
 
 good_index = index > 0;
