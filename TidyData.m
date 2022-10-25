@@ -15,7 +15,8 @@ Opt.taskFilter = [];
 Opt.cellFilter = [];
 Opt.behFilter = [];
 
-[animal, day] = deal('RY16', 36);
+%[animal, day] = deal('RY16', 36);
+[animal, day] = deal('RY22', 21);
 
 % ==========
 % Input data
@@ -30,7 +31,9 @@ spikes   = units.getRateMatrix(animal, day,...
                             'taskFilter', Opt.taskFilter,...
                             'cellFilter', Opt.cellFilter,...
                             'spikeData', spikeDat);
+
 clear spikeDat
+
 beh = gbehavior.lookup(animal, [], day);
 [spikes, beh_filtered, ~] = units.atBehavior(beh, spikes,...
     'useGPU', false,....
@@ -65,7 +68,7 @@ writetable(labeledSpiking, spiking_fn);
 
 % Cell properties
 cell_fn    = coding.file.datafolder('exp_raw', 'visualize_raw_neural',...
-                                        animal + "_" + day + "_" + 'cell.csv');
+                                        animal day + "_" + 'cell.csv');
 writetable(spikes.cellTable, cell_fn);
 
 % Ripples (CA1 and cortical)
@@ -82,7 +85,13 @@ writetable([rippletime; rippletimepfc], rip_fn);
 % Rhythms (Just theta for now)
 rhythm        = lfpLib.create.rhythmTable(animal, {'thetaref', 'eegref'}, day, 'label', {'', 'broad'});
 rhythm_fn     = coding.file.datafolder('exp_raw', 'visualize_raw_neural', ...
-                                         animal + "_" + day + "_" + 'rhythm.nc');
+                                         animal + "_" + day + "_" + 'rhythmref.nc');
+util.table.netcdfwrite(rhythm, rhythm_fn);
+util.notify.pushover("Finished writing rhythm table")
+
+rhythm        = lfpLib.create.rhythmTable(animal, {'theta', 'eeg'}, day, 'label', {'', 'broad'});
+rhythm_fn     = coding.file.datafolder('exp_raw', 'visualize_raw_neural', ...
+                                         animal + "_" + day + "_" + 'rhythm');
 util.table.netcdfwrite(rhythm, rhythm_fn);
 util.notify.pushover("Finished writing rhythm table")
 
