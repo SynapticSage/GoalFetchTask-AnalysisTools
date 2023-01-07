@@ -15,8 +15,8 @@ Opt.taskFilter = [];
 Opt.cellFilter = [];
 Opt.behFilter = [];
 
-%[animal, day] = deal('RY16', 36);
-[animal, day] = deal('RY22', 21);
+[animal, day] = deal('RY16', 36);
+%[animal, day] = deal('RY22', 21);
 
 % ==========
 % Input data
@@ -61,9 +61,10 @@ writetable(task, task_fn);
 
 
 % Spikes
-labeledSpiking = units.labeledSpiking(spikes, ["block", "subblock", "blocktraj", "traj"], beh, task);
+labeledSpiking = units.labeledSpiking(spikes, ...
+    ["block", "subblock", "blocktraj", "traj"], beh, task);
 spiking_fn = coding.file.datafolder('exp_raw', 'visualize_raw_neural',...
-                                        animal + "_" + day + "_" + 'labeled_spiking.csv');
+                            animal + "_" + day + "_" + 'labeled_spiking.csv');
 writetable(labeledSpiking, spiking_fn);
 
 % Cell properties
@@ -83,17 +84,31 @@ rippletimepfc.area = repmat("PFC", height(rippletimepfc), 1);
 writetable([rippletime; rippletimepfc], rip_fn);
 
 % Rhythms (Just theta for now)
-rhythm        = lfpLib.create.rhythmTable(animal, {'thetaref', 'eegref'}, day, 'label', {'', 'broad'});
 rhythm_fn     = coding.file.datafolder('exp_raw', 'visualize_raw_neural', ...
                                          animal + "_" + day + "_" + 'rhythmref.nc');
+rhythm        = lfpLib.create.rhythmTable(animal, {'thetaref', 'eegref'}, day, 'label', {'', 'broad'});
+for tetrode = progress(unique(rhythm.tetrode)')
+    tetrode_table = rhythm(rhythm.tetrode == tetrode,:);
+    tetfile = replace(rhythm_fn, 'mref.', sprintf('mref_%d.', tetrode))
+    util.table.netcdfwrite(tetrode_table, tetfile);
+end
+util.notify.pushover("Finished writing rhythmref table tetrodes")
 util.table.netcdfwrite(rhythm, rhythm_fn);
-util.notify.pushover("Finished writing rhythm table")
+util.notify.pushover("Finished writing rhythmref table")
+clear rhythm
 
-rhythm        = lfpLib.create.rhythmTable(animal, {'theta', 'eeg'}, day, 'label', {'', 'broad'});
+rhythm        = lfpLib.create.rhythmTable(animal, ...
+                {'theta', 'eeg'}, day, 'label', {'', 'broad'});
 rhythm_fn     = coding.file.datafolder('exp_raw', 'visualize_raw_neural', ...
-                                         animal + "_" + day + "_" + 'rhythm');
+                                       animal + "_" + day + "_" + 'rhythm');
+for tetrode = progress(unique(rhythm.tetrode)')
+    tetrode_table = rhythm(rhythm.tetrode == tetrode,:);
+    tetfile = replace(rhythm_fn, 'mref.', sprintf('mref_%d.', tetrode))
+    util.table.netcdfwrite(tetrode_table, tetfile);
+end
 util.table.netcdfwrite(rhythm, rhythm_fn);
 util.notify.pushover("Finished writing rhythm table")
+clear rhythm
 
 %spikeDat = ndb.load(animal, Opt.unit, 'ind', day);
 %spikes   = units.getRateMatrix(animal, day,...
